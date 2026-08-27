@@ -1,0 +1,29 @@
+# env
+.env
+.venv/
+
+# data (never commit raw/bronze/silver/gold data files)
+data/raw_downloads/*
+!data/raw_downloads/.gitkeep
+data/bronze/*
+!data/bronze/.gitkeep
+data/silver/*
+!data/silver/.gitkeep
+data/gold/*
+!data/gold/.gitkeep
+
+# python
+__pycache__/
+*.pyc
+.pytest_cache/
+.ruff_cache/
+
+# uv
+uv.lock.bak
+
+# node / frontend
+frontend/node_modules/
+frontend/dist/
+
+# os
+.DS_Store

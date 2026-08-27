@@ -1,0 +1,50 @@
+.rupee-scene {
+  perspective: 500px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.rupee-spin {
+  position: relative;
+  width: 1em;
+  height: 1em;
+  transform-style: preserve-3d;
+  animation: rupee-spin 3.2s linear infinite;
+}
+
+.rupee-face {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  line-height: 1;
+  background: linear-gradient(180deg, #ffe9a8 0%, #e8b93d 45%, #b8860b 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  filter: drop-shadow(0 2px 4px rgba(184, 134, 11, 0.35));
+  backface-visibility: hidden;
+}
+
+.rupee-back {
+  transform: rotateY(180deg);
+}
+
+@keyframes rupee-spin {
+  from {
+    transform: rotateY(0deg);
+  }
+  to {
+    transform: rotateY(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .rupee-spin {
+    animation: none;
+  }
+}

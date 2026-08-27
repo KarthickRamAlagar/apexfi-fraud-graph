@@ -1,0 +1,60 @@
+[project]
+name = "upi-fraud-gnn"
+version = "0.1.0"
+description = "Real-time cross-channel fraud detection & explainable AI for Indian UPI/IMPS payments using heterogeneous GNNs"
+requires-python = ">=3.11"
+dependencies = [
+    # core / shared across every stage
+    "python-dotenv>=1.0",
+    "sqlalchemy>=2.0",
+    "psycopg2-binary>=2.9",
+    "pandas>=2.2",
+    "numpy>=1.26",
+]
+
+[dependency-groups]
+# Stage 1: ETL — fetching + loading Bronze/Silver/Gold
+etl = [
+    "requests>=2.32",
+    "kaggle>=1.6",       # for IEEE-CIS / DGraph-Fin downloads
+]
+
+# Stage 2: EDA — React EDA page support + standalone Streamlit app
+eda = [
+    "streamlit>=1.38",
+    "plotly>=5.24",
+    "matplotlib>=3.9",
+    "seaborn>=0.13",
+    "pyarrow>=17.0",           # Parquet read/write for the Streamlit snapshot
+]
+
+# Stage 3: Web application backend (FastAPI)
+backend = [
+    "fastapi>=0.115",
+    "uvicorn[standard]>=0.31",
+    "pydantic>=2.9",
+]
+
+# Stage 5: ML — graph construction, GNN training, explainability
+ml = [
+    "torch>=2.4",
+    "torch-geometric>=2.6",
+    "scikit-learn>=1.5",
+    "networkx>=3.3",
+]
+
+# Optional: text-to-SQL / LLM feature ("Ask your data" page)
+# OpenAI primary → Gemini fallback → Hugging Face fallback, in that order
+llm = [
+    "openai>=1.50",
+    "google-genai>=1.0",
+    "huggingface_hub>=0.35",
+]
+
+dev = [
+    "pytest>=8.3",
+    "ruff>=0.6",
+]
+
+[tool.uv]
+package = false

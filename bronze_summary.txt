@@ -1,0 +1,9 @@
+Table                                                 Rows  Columns
+-------------------------------------------------------------------
+raw_ieee_cis_transaction                           590,540      394
+raw_ieee_cis_identity                              144,233       41
+raw_dgraph_fin_nodes                             3,700,550       21
+raw_dgraph_fin_edges                             4,300,999        6
+raw_money_rates_2000_2018                               18        5
+raw_digital_payment_transactions                         4        3
+raw_digital_payment_volume_monthly                      13        3
