@@ -30,6 +30,24 @@ from etl.db.connection import get_engine
 OUTPUT_DIR = os.path.join(os.path.dirname(__file__), "..", "..", "streamlit_app", "data")
 SAMPLE_SIZE = 50_000
 
+# For raw-row browsing, only meaningful/interpretable columns — the 339
+# anonymized V-columns aren't meaningfully browsable as raw values anyway
+# (their aggregate distributions are still fully covered in the full-column
+# stats export above). Including all 440 raw columns in a 50K-row sample
+# is ~1.4GB in memory once loaded — likely what was exceeding Streamlit
+# Community Cloud's free-tier memory ceiling.
+IEEE_SAMPLE_COLUMNS = [
+    "transactionid", "is_fraud", "transactionamt", "productcd",
+    "card1", "card2", "card3", "card4", "card5", "card6",
+    "addr1", "addr2", "dist1", "dist2", "p_emaildomain", "r_emaildomain",
+    "c1", "c2", "c3", "c4", "c5", "c6", "c7", "c8", "c9", "c10", "c11", "c12", "c13", "c14",
+    "d1", "d2", "d3", "d4", "d5", "d6", "d7", "d8", "d9", "d10", "d11", "d12", "d13", "d14", "d15",
+    "m1", "m2", "m3", "m4", "m5", "m6", "m7", "m8", "m9",
+    "devicetype", "deviceinfo",
+    "day_of_week", "hour_of_day", "fiscal_year", "bank_rate", "sbi_lending_rate", "call_money_rate",
+    "transaction_date",
+]
+
 engine = get_engine()
 
 
@@ -105,15 +123,16 @@ def compute_full_column_stats(table, conn):
     return pd.DataFrame(records), row_count
 
 
-def export_sample(table, conn, sample_size):
+def export_sample(table, conn, sample_size, columns=None):
     total = conn.execute(text(f"SELECT COUNT(*) FROM gold.{table}")).scalar()
+    col_list = ", ".join(columns) if columns else "*"
     if total <= sample_size:
-        query = f"SELECT * FROM gold.{table}"
+        query = f"SELECT {col_list} FROM gold.{table}"
     else:
         # TABLESAMPLE is fast (block-level sampling), fine for a
         # representative snapshot — doesn't need to be a perfect random sample
         pct = min(100.0, sample_size / total * 100 * 1.2)  # slight oversample, then trim
-        query = f"SELECT * FROM gold.{table} TABLESAMPLE BERNOULLI({pct}) LIMIT {sample_size}"
+        query = f"SELECT {col_list} FROM gold.{table} TABLESAMPLE BERNOULLI({pct}) LIMIT {sample_size}"
     return pd.read_sql(text(query), conn)
 
 
@@ -128,9 +147,10 @@ def main():
             print(f"  {len(stats_df)} columns profiled from {row_count:,} real rows")
 
             print(f"Exporting {SAMPLE_SIZE:,}-row sample of {table}...")
-            sample_df = export_sample(table, conn, SAMPLE_SIZE)
+            cols = IEEE_SAMPLE_COLUMNS if table == "ieee_cis_features" else None
+            sample_df = export_sample(table, conn, SAMPLE_SIZE, columns=cols)
             sample_df.to_parquet(os.path.join(OUTPUT_DIR, f"{table}_sample.parquet"))
-            print(f"  {len(sample_df):,} rows exported")
+            print(f"  {len(sample_df):,} rows exported ({len(sample_df.columns)} columns)")
 
         # small tables — export in full, no sampling needed
         for table in [
