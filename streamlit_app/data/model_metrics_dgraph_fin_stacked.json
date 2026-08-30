@@ -1,0 +1,21 @@
+{
+  "precision": 0.9984,
+  "recall": 0.5243,
+  "f1": 0.6875,
+  "roc_auc": 0.9374,
+  "pr_auc": 0.5937,
+  "confusion_matrix": [
+    [
+      181512,
+      2
+    ],
+    [
+      1107,
+      1220
+    ]
+  ],
+  "model": "Logistic stacking: LightGBM + GNN probabilities",
+  "learned_weight_lightgbm": 8.988,
+  "learned_weight_gnn": 6.771,
+  "note": "DGraph-Fin is a known-hard benchmark in the published literature (GADBench reports all methods perform poorly on it) \u2014 results here should be read in that context, not against IEEE-CIS-level expectations."
+}

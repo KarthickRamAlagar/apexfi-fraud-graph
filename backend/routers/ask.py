@@ -113,7 +113,9 @@ def validate_sql(sql):
 
 @router.post("/")
 def ask_question(req: AskRequest):
-    lang_name = LANGUAGE_NAMES.get(req.language, "English")
+    # req.language still matters for the frontend's speech-recognition
+    # (voice input in Tamil/Kannada/etc.), but the answer itself is
+    # always written in English now — see note below on why.
 
     sql_prompt = f"Question: {req.question}\n\nWrite the PostgreSQL SELECT query to answer this."
     try:
@@ -143,7 +145,7 @@ def ask_question(req: AskRequest):
     answer_prompt = (
         f"The question was: {req.question}\n"
         f"The real query result (as JSON) is: {results[:20]}\n"
-        f"Write a short, direct answer in {lang_name}, citing the real numbers. "
+        f"Write a short, direct answer in English, citing the real numbers. "
         f"One or two sentences. No SQL, no markdown."
     )
     try:

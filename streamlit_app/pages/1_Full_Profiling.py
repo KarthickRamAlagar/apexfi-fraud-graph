@@ -8,10 +8,11 @@ import plotly.express as px
 import streamlit as st
 
 from data_loader import snapshot_exists, load_column_stats, load_sample, SNAPSHOT_MISSING_MESSAGE
-from style import apply_glassmorphism, render_sidebar_emblem
+from style import apply_glassmorphism, apply_desktop_only_gate, render_sidebar_emblem
 
 st.set_page_config(page_title="Full Profiling — ApexFi Deep EDA", layout="wide")
 apply_glassmorphism()
+apply_desktop_only_gate()
 render_sidebar_emblem()
 st.title("Full Column Profiling")
 st.caption(

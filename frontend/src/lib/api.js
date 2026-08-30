@@ -19,7 +19,17 @@ export const api = {
   analytics: () => fetchJson('/api/analytics/'),
   eda: (dataset) => fetchJson(`/api/eda/${dataset}`),
   investigateSamples: () => fetchJson('/api/investigate/samples'),
+  investigateSearch: (q) => fetchJson(`/api/investigate/search?q=${encodeURIComponent(q)}`),
   investigate: (id) => fetchJson(`/api/investigate/${id}`),
+  scoreNewTransaction: (payload) =>
+    fetchJson('/api/predict/new-transaction', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    }),
+  dgraphFinSamples: () => fetchJson('/api/dgraph-fin/samples'),
+  dgraphFinSearch: (q) => fetchJson(`/api/dgraph-fin/search?q=${encodeURIComponent(q)}`),
+  dgraphFinScore: (nodeId) => fetchJson(`/api/dgraph-fin/score/${nodeId}`),
   ask: (question, language) =>
     fetchJson('/api/ask/', {
       method: 'POST',

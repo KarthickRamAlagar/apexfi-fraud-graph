@@ -8,6 +8,7 @@ from fastapi import APIRouter, HTTPException
 from sqlalchemy import text
 
 from backend.db import engine
+from backend.services.fraud_predictor import get_predictor
 
 router = APIRouter(prefix="/api/dashboard", tags=["dashboard"])
 
@@ -29,9 +30,9 @@ def get_summary():
 
 @router.get("/recent-transactions")
 def get_recent_transactions():
-    """A real mix of transactions with their real historical fraud LABEL —
-    not a live risk prediction (the model isn't trained yet). Labeled
-    honestly on the frontend as historical ground truth, not a score.
+    """Real historical ground-truth label AND a real live model prediction,
+    side by side, for the same 8 real recent transactions — concrete,
+    at-a-glance evidence of real accuracy, not just a claimed number.
     """
     with engine.connect() as conn:
         rows = conn.execute(
@@ -45,15 +46,30 @@ def get_recent_transactions():
             )
         ).fetchall()
 
-    return {
-        "transactions": [
-            {
-                "id": f"TX-{r.transactionid}",
-                "amount": f"₹{r.transactionamt:,.2f}",
-                "device": f"DeviceInfo: {r.deviceinfo}" if r.deviceinfo else "unknown",
-                "card": f"card1: {int(r.card1)}" if r.card1 is not None else "unknown",
-                "historicalLabel": "Fraud" if r.is_fraud else "Normal",
-            }
-            for r in rows
-        ]
-    }
+    try:
+        predictor = get_predictor()
+    except Exception as e:
+        predictor = None
+        print(f"Predictor unavailable for recent-transactions: {e}")
+
+    transactions = []
+    for r in rows:
+        predicted_label = None
+        if predictor:
+            try:
+                pred = predictor.predict(r.transactionid)
+                if pred:
+                    predicted_label = "Fraud" if pred["isFlagged"] else "Normal"
+            except Exception as e:
+                print(f"Prediction failed for {r.transactionid} in recent-transactions: {e}")
+
+        transactions.append({
+            "id": f"TX-{r.transactionid}",
+            "amount": f"₹{r.transactionamt:,.2f}",
+            "device": f"DeviceInfo: {r.deviceinfo}" if r.deviceinfo else "unknown",
+            "card": f"card1: {int(r.card1)}" if r.card1 is not None else "unknown",
+            "historicalLabel": "Fraud" if r.is_fraud else "Normal",
+            "predictedLabel": predicted_label,  # None if prediction unavailable — frontend shows this honestly
+        })
+
+    return {"transactions": transactions}

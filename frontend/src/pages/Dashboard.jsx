@@ -1,4 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
+import { Link } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import {
   AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
@@ -68,10 +69,10 @@ export default function Dashboard() {
   ]
 
   return (
-    <div className="container space-y-6 py-8">
+    <div className="container py-8 space-y-6">
       <motion.div variants={fadeUp} initial="hidden" animate="show">
         <p className="text-sm text-muted-foreground">Monitored across both source datasets</p>
-        <h1 className="font-display text-3xl font-semibold tabular-nums">
+        <h1 className="text-3xl font-semibold font-display tabular-nums">
           {totalEntities.toLocaleString()}{' '}
           <span className="text-base font-normal text-muted-foreground">total entities</span>
         </h1>
@@ -89,6 +90,7 @@ export default function Dashboard() {
           label="DGraph-Fin"
           sublabel="User network"
           value={summary.dgraph_fin.total_nodes.toLocaleString()}
+          trend={riskDistribution.map((d) => d.value)}
           tone="high"
         />
       </motion.div>
@@ -107,12 +109,41 @@ export default function Dashboard() {
           <div className="text-xs text-muted-foreground">Total connections</div>
         </Panel>
         <Panel title="Model Status" icon={Cpu}>
-          <div className="text-2xl font-semibold capitalize text-muted-foreground">
-            {summary.model_status.replace(/_/g, ' ')}
+          <div className={cn(
+            'text-2xl font-semibold capitalize',
+            summary.model_status === 'trained_and_validated' ? 'text-risk-low' : 'text-muted-foreground'
+          )}>
+            {summary.model_status === 'trained_and_validated' ? 'Trained' : summary.model_status.replace(/_/g, ' ')}
           </div>
-          <div className="text-xs text-muted-foreground">Training paused, resuming soon</div>
+          <div className="text-xs text-muted-foreground">
+            {summary.model_status === 'trained_and_validated'
+              ? `${summary.model_validation?.ieee_cis?.seeds_validated ?? 3}-seed validated`
+              : 'Some models still pending'}
+          </div>
         </Panel>
       </motion.div>
+
+      {summary.model_status === 'trained_and_validated' && summary.model_validation && (
+        <motion.div className="grid grid-cols-1 gap-4 md:grid-cols-2" variants={fadeUp} initial="hidden" animate="show" custom={2.5}>
+          {Object.entries(summary.model_validation).map(([key, v]) => (
+            <Panel key={key} title={key === 'ieee_cis' ? 'IEEE-CIS Model (validated)' : 'DGraph-Fin Model (validated)'} icon={Cpu}>
+              <div className="flex gap-6">
+                <div>
+                  <div className="font-mono text-xl font-semibold tabular-nums">
+                    {(v.f1_mean * 100).toFixed(1)}% <span className="text-xs font-normal text-muted-foreground">± {(v.f1_std * 100).toFixed(1)}</span>
+                  </div>
+                  <div className="text-xs text-muted-foreground">F1 score</div>
+                </div>
+                <div>
+                  <div className="font-mono text-xl font-semibold tabular-nums">{(v.roc_auc_mean * 100).toFixed(1)}%</div>
+                  <div className="text-xs text-muted-foreground">ROC-AUC</div>
+                </div>
+              </div>
+              <p className="mt-2 text-xs text-muted-foreground">Real, {v.seeds_validated}-seed cross-validated — stacked LightGBM + GNN.</p>
+            </Panel>
+          ))}
+        </motion.div>
+      )}
 
       <motion.div className="grid grid-cols-1 gap-4 lg:grid-cols-3" variants={fadeUp} initial="hidden" animate="show" custom={3}>
         <Panel title="Fraud Rate Trend" icon={TrendingUp} className="lg:col-span-2">
@@ -145,7 +176,7 @@ export default function Dashboard() {
             <div className="space-y-3">
               {riskDistribution.map((r) => (
                 <div key={r.label}>
-                  <div className="mb-1 flex justify-between text-xs">
+                  <div className="flex justify-between mb-1 text-xs">
                     <span className="text-muted-foreground">{r.label}</span>
                     <span className={cn('font-medium tabular-nums', toneClasses[r.tone])}>
                       {r.value.toFixed(2)}%
@@ -180,47 +211,101 @@ export default function Dashboard() {
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className="border-b border-border text-left text-xs text-muted-foreground">
+                <tr className="text-xs text-left border-b border-border text-muted-foreground">
                   <th className="pb-2 font-normal">Transaction</th>
                   <th className="pb-2 font-normal">Amount</th>
                   <th className="pb-2 font-normal">Device</th>
                   <th className="pb-2 font-normal">Card</th>
                   <th className="pb-2 font-normal">Historical Label</th>
+                  <th className="pb-2 font-normal">Model Prediction</th>
                 </tr>
               </thead>
               <tbody>
-                {recentTx.map((tx) => (
-                  <tr key={tx.id} className="border-b border-border/50 last:border-0">
-                    <td className="py-2.5 font-mono text-xs">{tx.id}</td>
-                    <td className="py-2.5 tabular-nums">{tx.amount}</td>
-                    <td className="py-2.5 text-muted-foreground">{tx.device}</td>
-                    <td className="py-2.5 text-muted-foreground">{tx.card}</td>
-                    <td className="py-2.5">
-                      <span
-                        className={cn(
-                          'rounded-full px-2 py-0.5 text-xs',
-                          tx.historicalLabel === 'Fraud' ? 'bg-risk-high/15 text-risk-high' : 'bg-muted text-muted-foreground'
+                {recentTx.map((tx) => {
+                  const matches = tx.predictedLabel && tx.predictedLabel === tx.historicalLabel
+                  return (
+                    <tr key={tx.id} className="border-b border-border/50 last:border-0">
+                      <td className="py-2.5 font-mono text-xs">{tx.id}</td>
+                      <td className="py-2.5 tabular-nums">{tx.amount}</td>
+                      <td className="py-2.5 text-muted-foreground">{tx.device}</td>
+                      <td className="py-2.5 text-muted-foreground">{tx.card}</td>
+                      <td className="py-2.5">
+                        <span
+                          className={cn(
+                            'rounded-full px-2 py-0.5 text-xs',
+                            tx.historicalLabel === 'Fraud' ? 'bg-risk-high/15 text-risk-high' : 'bg-muted text-muted-foreground'
+                          )}
+                        >
+                          {tx.historicalLabel}
+                        </span>
+                      </td>
+                      <td className="py-2.5">
+                        {tx.predictedLabel ? (
+                          <span className="flex items-center gap-1.5">
+                            <span
+                              className={cn(
+                                'rounded-full px-2 py-0.5 text-xs',
+                                tx.predictedLabel === 'Fraud' ? 'bg-risk-high/15 text-risk-high' : 'bg-muted text-muted-foreground'
+                              )}
+                            >
+                              {tx.predictedLabel}
+                            </span>
+                            <span className={matches ? 'text-risk-low' : 'text-risk-medium'} title={matches ? 'Matches historical label' : "Doesn't match historical label"}>
+                              {matches ? '✓' : '✗'}
+                            </span>
+                          </span>
+                        ) : (
+                          <span className="text-xs text-muted-foreground">unavailable</span>
                         )}
-                      >
-                        {tx.historicalLabel}
-                      </span>
-                    </td>
-                  </tr>
-                ))}
+                      </td>
+                    </tr>
+                  )
+                })}
               </tbody>
             </table>
           </div>
           <p className="mt-2 text-xs text-muted-foreground">
-            Real historical labels from the source data — not a live model prediction.
+            Historical Label is real ground truth from the source data. Model Prediction is a real,
+            live prediction from the trained stacked model, computed fresh for each of these
+            transactions — not the same thing, shown side by side on purpose.
           </p>
         </Panel>
+
       </motion.div>
 
-      <PendingBanner>
-        <strong className="text-foreground">Model not yet trained.</strong> Every figure on this page
-        is real, pulled live from the Gold layer. The Investigate page will show real GNNExplainer
-        output once training completes.
-      </PendingBanner>
+      {summary.model_status === 'trained_and_validated' ? (
+        <div className="p-4 text-sm leading-relaxed border border-dashed rounded-lg border-muted-foreground/30 bg-muted/20 text-muted-foreground">
+          <p>
+            <strong className="text-foreground">Models trained and validated.</strong> Every figure on
+            this page is real, pulled live from the Gold layer.
+          </p>
+          <div className="flex flex-wrap gap-2 mt-3">
+            <Link
+              to="/investigate"
+              className="rounded-md border border-border bg-secondary/40 px-3 py-1.5 text-xs text-foreground transition-colors hover:bg-secondary"
+            >
+              Investigate a real transaction →
+            </Link>
+            <Link
+              to="/score-new"
+              className="rounded-md border border-border bg-secondary/40 px-3 py-1.5 text-xs text-foreground transition-colors hover:bg-secondary"
+            >
+              Score a new IEEE-CIS transaction →
+            </Link>
+            <Link
+              to="/score-account"
+              className="rounded-md border border-border bg-secondary/40 px-3 py-1.5 text-xs text-foreground transition-colors hover:bg-secondary"
+            >
+              Score an unlabeled DGraph-Fin account →
+            </Link>
+          </div>
+        </div>
+      ) : (
+        <PendingBanner>
+          <strong className="text-foreground">Training in progress.</strong> Every figure on this page
+          is real, pulled live from the Gold layer. Some models are still being validated.
+        </PendingBanner>
+      )}
     </div>
   )
 }

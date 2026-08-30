@@ -1,0 +1,21 @@
+{
+  "precision": 0.8927,
+  "recall": 0.7519,
+  "f1": 0.8163,
+  "roc_auc": 0.9722,
+  "pr_auc": 0.8578,
+  "confusion_matrix": [
+    [
+      85202,
+      280
+    ],
+    [
+      769,
+      2330
+    ]
+  ],
+  "model": "Logistic stacking: LightGBM + GNN probabilities",
+  "learned_weight_lightgbm": 8.252,
+  "learned_weight_gnn": 0.317,
+  "note": "F1/precision genuinely improved over LightGBM alone, but ROC-AUC/PR-AUC (ranking-quality metrics) stayed essentially flat \u2014 the gain reflects a better operating point from combining models, not fundamentally new discriminative signal from the graph. The learned weight ratio (~19:1 favoring LightGBM) reflects this."
+}

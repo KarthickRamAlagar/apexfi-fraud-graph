@@ -13,6 +13,7 @@ const RESET_MS = 5 * 60 * 1000 // 5 minutes
 
 export default function AskYourData() {
   const [input, setInput] = useState('')
+  const [justTranscribed, setJustTranscribed] = useState(false)
   const [phase, setPhase] = useState('idle')
   const [result, setResult] = useState(null)
   const [count, setCount] = useState(0)
@@ -41,7 +42,10 @@ export default function AskYourData() {
         .join('')
       setInput(transcript)
     }
-    recognition.onend = () => setListening(false)
+    recognition.onend = () => {
+      setListening(false)
+      setJustTranscribed(true)
+    }
     recognitionRef.current = recognition
   }, [lang])
 
@@ -123,14 +127,27 @@ export default function AskYourData() {
     setSpeaking(false)
   }
 
-  function speakText(text, speakLang) {
+  function speakText(text) {
     if (!window.speechSynthesis) return
     window.speechSynthesis.cancel()
     const utterance = new SpeechSynthesisUtterance(text)
-    // Real LLM answers are generated directly in the user's chosen language
-    // (a genuine translation, not a hand-written mock one), so speak them in
-    // that language rather than forcing English.
-    utterance.lang = speakLang || 'en-IN'
+    // Backend now always answers in English (see ask.py) regardless of the
+    // question's input language, so always speak in English here too —
+    // matching mismatched text/voice languages doesn't work with TTS
+    // (it reads the literal text, it doesn't translate).
+    utterance.lang = 'en-IN'
+
+    // Prefer a specific, consistent voice when the browser has one
+    // available — falls back to the browser's own default en-IN voice
+    // if not, since exact voice availability depends on the user's OS/
+    // browser and can't be guaranteed from code alone.
+    const voices = window.speechSynthesis.getVoices()
+    const preferred =
+      voices.find((v) => v.lang === 'en-IN' && /ravi|neerja/i.test(v.name)) ||
+      voices.find((v) => v.lang === 'en-IN') ||
+      voices.find((v) => v.lang.startsWith('en'))
+    if (preferred) utterance.voice = preferred
+
     utterance.onend = () => setSpeaking(false)
     setSpeaking(true)
     window.speechSynthesis.speak(utterance)
@@ -143,7 +160,7 @@ export default function AskYourData() {
       setSpeaking(false)
       return
     }
-    speakText(result.answer, lang)
+    speakText(result.answer)
   }
 
   const remaining = MAX_QUESTIONS - count
@@ -153,8 +170,8 @@ export default function AskYourData() {
   return (
     <div className="container py-8">
       <div className="mb-6">
-        <p className="text-xs uppercase tracking-wide text-muted-foreground">ApexFi / Ask your data</p>
-        <h1 className="mt-1 font-display text-2xl font-semibold">Ask your data</h1>
+        <p className="text-xs tracking-wide uppercase text-muted-foreground">ApexFi / Ask your data</p>
+        <h1 className="mt-1 text-2xl font-semibold font-display">Ask your data</h1>
         <p className="mt-1 text-sm text-muted-foreground">
           Ask a question in plain English or by voice — answered from the real Gold layer.
         </p>
@@ -215,20 +232,20 @@ export default function AskYourData() {
                 exit={{ opacity: 0, y: -8 }}
                 transition={{ duration: 0.2 }}
               >
-                <div className="mb-4 flex items-center justify-between">
+                <div className="flex items-center justify-between mb-4">
                   <span className="text-xs text-muted-foreground">
                     {remaining} of {MAX_QUESTIONS} questions remaining this session
                   </span>
                   <div className="h-1.5 w-32 overflow-hidden rounded-full bg-secondary">
                     <div
-                      className="h-full rounded-full bg-primary transition-all"
+                      className="h-full transition-all rounded-full bg-primary"
                       style={{ width: `${(count / MAX_QUESTIONS) * 100}%` }}
                     />
                   </div>
                 </div>
 
                 {limitReached && (
-                  <div className="mb-4 flex items-start gap-2 rounded-lg border border-risk-medium/40 bg-risk-medium/10 px-4 py-3 text-xs text-risk-medium">
+                  <div className="flex items-start gap-2 px-4 py-3 mb-4 text-xs border rounded-lg border-risk-medium/40 bg-risk-medium/10 text-risk-medium">
                     <AlertCircle size={14} className="mt-0.5 shrink-0" />
                     <span>
                       You have reached your limit for this short session (5 mins)! It will reset after
@@ -237,7 +254,7 @@ export default function AskYourData() {
                   </div>
                 )}
 
-                <div className="mb-4 flex flex-wrap gap-2">
+                <div className="flex flex-wrap gap-2 mb-4">
                   {suggestedQuestions.map((sq) => (
                     <button
                       key={sq.question}
@@ -253,7 +270,10 @@ export default function AskYourData() {
                 <div className="flex items-center gap-2 rounded-lg border border-border bg-secondary/30 px-3 py-2.5">
                   <input
                     value={input}
-                    onChange={(e) => setInput(e.target.value)}
+                    onChange={(e) => {
+                      setInput(e.target.value)
+                      setJustTranscribed(false)
+                    }}
                     onKeyDown={(e) => e.key === 'Enter' && handleAsk()}
                     placeholder={
                       limitReached
@@ -263,7 +283,7 @@ export default function AskYourData() {
                           : 'Type or speak your question…'
                     }
                     disabled={limitReached}
-                    className="flex-1 bg-transparent text-sm text-foreground outline-none placeholder:text-muted-foreground disabled:cursor-not-allowed"
+                    className="flex-1 text-sm bg-transparent outline-none text-foreground placeholder:text-muted-foreground disabled:cursor-not-allowed"
                   />
                   {speechSupported && (
                     <button
@@ -279,18 +299,27 @@ export default function AskYourData() {
                     </button>
                   )}
                   <button
-                    onClick={() => handleAsk()}
+                    onClick={() => {
+                      setJustTranscribed(false)
+                      handleAsk()
+                    }}
                     disabled={!input.trim() || limitReached || phase === 'thinking'}
-                    className="flex h-8 w-8 items-center justify-center rounded-full bg-primary text-primary-foreground transition-transform hover:scale-105 disabled:cursor-not-allowed disabled:opacity-40"
+                    className="flex items-center justify-center w-8 h-8 transition-transform rounded-full bg-primary text-primary-foreground hover:scale-105 disabled:cursor-not-allowed disabled:opacity-40"
                     aria-label="Ask"
                   >
                     <Send size={14} />
                   </button>
                 </div>
 
+                {justTranscribed && input && (
+                  <p className="mt-2 text-xs text-risk-medium">
+                    Please check the transcribed text above before sending — voice recognition for
+                    regional languages can occasionally mishear a word.
+                  </p>
+                )}
+
                 {!speechSupported && (
-                  <p className="mt-2 text-xs text-muted-foreground">
-                    Voice input isn't supported in this browser — try Chrome for speech-to-text.
+                  <p className="mt-2 text-xs text-muted-foreground">                    Voice input isn't supported in this browser — try Chrome for speech-to-text.
                   </p>
                 )}
                 {listening && (
@@ -352,9 +381,9 @@ export default function AskYourData() {
                   </div>
                 )}
 
-                <div className="mt-5 border-t border-border/60 pt-4">
+                <div className="pt-4 mt-5 border-t border-border/60">
                   {limitReached && (
-                    <div className="mb-4 flex items-start gap-2 rounded-lg border border-risk-medium/40 bg-risk-medium/10 px-4 py-3 text-xs text-risk-medium">
+                    <div className="flex items-start gap-2 px-4 py-3 mb-4 text-xs border rounded-lg border-risk-medium/40 bg-risk-medium/10 text-risk-medium">
                       <AlertCircle size={14} className="mt-0.5 shrink-0" />
                       <span>
                         You have reached your limit for this short session (5 mins)! It will reset
@@ -384,7 +413,7 @@ export default function AskYourData() {
         </Panel>
       </div>
 
-      <p className="mt-4 text-center text-xs text-muted-foreground">
+      <p className="mt-4 text-xs text-center text-muted-foreground">
         Regional-language text is machine-translated for this demo and has not been reviewed by a
         native speaker — verify before using in a live presentation.
       </p>

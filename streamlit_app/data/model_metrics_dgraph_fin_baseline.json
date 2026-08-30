@@ -1,0 +1,19 @@
+{
+  "accuracy": 0.9939,
+  "precision": 0.9943,
+  "recall": 0.5243,
+  "f1": 0.6866,
+  "roc_auc": 0.9377,
+  "pr_auc": 0.5821,
+  "confusion_matrix": [
+    [
+      181507,
+      7
+    ],
+    [
+      1107,
+      1220
+    ]
+  ],
+  "model": "LightGBM (tabular-only, no graph)"
+}

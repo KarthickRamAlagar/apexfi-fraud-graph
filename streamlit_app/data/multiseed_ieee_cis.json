@@ -1,0 +1,52 @@
+{
+  "seeds": [
+    42,
+    123,
+    777
+  ],
+  "lightgbm": {
+    "precision": {
+      "mean": 0.8254,
+      "std": 0.0051
+    },
+    "recall": {
+      "mean": 0.7679,
+      "std": 0.0012
+    },
+    "f1": {
+      "mean": 0.7956,
+      "std": 0.0024
+    },
+    "roc_auc": {
+      "mean": 0.9733,
+      "std": 0.0002
+    },
+    "pr_auc": {
+      "mean": 0.8522,
+      "std": 0.0003
+    }
+  },
+  "stacked": {
+    "precision": {
+      "mean": 0.8779,
+      "std": 0.0023
+    },
+    "recall": {
+      "mean": 0.7306,
+      "std": 0.0009
+    },
+    "f1": {
+      "mean": 0.7975,
+      "std": 0.0014
+    },
+    "roc_auc": {
+      "mean": 0.9736,
+      "std": 0.0002
+    },
+    "pr_auc": {
+      "mean": 0.8504,
+      "std": 0.0005
+    }
+  },
+  "note": "GNN reused a single validated checkpoint across all seeds (not retrained per-seed), given GNN training's memory fragility on available hardware. LightGBM's own training randomness varied per seed; train/val/test split held fixed."
+}

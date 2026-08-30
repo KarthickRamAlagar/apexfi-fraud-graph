@@ -1,15 +1,12 @@
-"""Investigate page endpoint — real transaction details and real graph
-neighbors (device_shared / card_shared edges), queried live per-transaction
-(fast — these are indexed single-row/small-set lookups, not full-table
-scans, so no precomputation needed here unlike EDA/Analytics).
-
-Risk score / GNNExplainer output is NOT included — the model isn't trained
-yet. The frontend shows an honest "pending" state for that part.
+"""Investigate page endpoint — real transaction details, real graph
+neighbors (device_shared / card_shared edges), AND real risk prediction
+(stacked LightGBM + GNN model, real SHAP-based explanation).
 """
 from fastapi import APIRouter, HTTPException
 from sqlalchemy import text
 
 from backend.db import engine
+from backend.services.fraud_predictor import get_predictor
 
 router = APIRouter(prefix="/api/investigate", tags=["investigate"])
 
@@ -47,6 +44,30 @@ def get_samples():
         ).fetchall()
 
     return {"samples": [format_transaction(r) for r in fraud_rows + normal_rows]}
+
+
+@router.get("/search")
+def search_transactions(q: str, limit: int = 8):
+    """Real live search across all 590,540 transactions, by ID prefix —
+    used for the Investigate page's autosuggest dropdown. Must be
+    registered before /{transaction_id} below, or FastAPI would try to
+    match "search" itself as a transaction ID.
+    """
+    q = q.strip().replace("TX-", "") if q else ""
+    if not q or not q.isdigit():
+        return {"results": []}
+
+    with engine.connect() as conn:
+        rows = conn.execute(
+            text(
+                "SELECT transactionid, transactionamt, productcd, card1, deviceinfo, transaction_date, is_fraud "
+                "FROM gold.ieee_cis_features WHERE transactionid::text LIKE :pattern "
+                "ORDER BY transactionid LIMIT :limit"
+            ),
+            {"pattern": f"{q}%", "limit": limit},
+        ).fetchall()
+
+    return {"results": [format_transaction(r) for r in rows]}
 
 
 @router.get("/{transaction_id}")
@@ -118,12 +139,43 @@ def get_investigation(transaction_id: str):
         if r.neighbor_id in neighbor_details
     ]
 
+    try:
+        predictor = get_predictor()
+        prediction = predictor.predict(int(numeric_id))
+    except Exception as e:
+        # honest degradation, not a silent wrong answer — real model files
+        # missing/corrupt shouldn't crash the whole page, just this part
+        prediction = None
+        print(f"Prediction failed for transaction {numeric_id}: {e}")
+
+    if prediction:
+        risk_assessment = {
+            "status": "predicted",
+            "riskScore": prediction["riskScore"],
+            "isFlagged": prediction["isFlagged"],
+            "threshold": prediction["threshold"],
+            "componentScores": prediction["componentScores"],
+            "topContributingFeatures": prediction["topContributingFeatures"],
+            "modelInfo": prediction["modelInfo"],
+            "note": (
+                "Real prediction from the validated stacked model (LightGBM + GNN). "
+                "Feature contributions via SHAP; graph context above shows real "
+                "device/card-sharing connections."
+            ),
+        }
+    else:
+        risk_assessment = {
+            "status": "unavailable",
+            "note": (
+                "This transaction is outside the trained model's dataset, or the "
+                "prediction service is temporarily unavailable. The network graph "
+                "above is still real structure from the database."
+            ),
+        }
+
     return {
         "center": format_transaction(center_row),
         "neighbors": neighbors,
         "connectionCounts": {"device_shared": device_count, "card_shared": card_count},
-        "riskAssessment": {
-            "status": "not_yet_trained",
-            "note": "Risk score and GNNExplainer feature-importance output will appear here once training completes. The network graph above is real structure — only the risk prediction is pending.",
-        },
+        "riskAssessment": risk_assessment,
     }

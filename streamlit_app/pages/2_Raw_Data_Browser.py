@@ -6,10 +6,11 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
 import streamlit as st
 
 from data_loader import snapshot_exists, load_sample, SNAPSHOT_MISSING_MESSAGE
-from style import apply_glassmorphism, render_sidebar_emblem
+from style import apply_glassmorphism, apply_desktop_only_gate, render_sidebar_emblem
 
 st.set_page_config(page_title="Raw Data Browser — ApexFi Deep EDA", layout="wide")
 apply_glassmorphism()
+apply_desktop_only_gate()
 render_sidebar_emblem()
 st.title("Raw Data Browser")
 

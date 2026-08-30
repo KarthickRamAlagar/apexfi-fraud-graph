@@ -27,3 +27,7 @@ frontend/dist/
 
 # os
 .DS_Store
+
+# ML model artifacts (large binaries — go to Hugging Face Hub instead)
+ml/checkpoints/
+*.pt

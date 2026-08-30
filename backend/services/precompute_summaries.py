@@ -394,7 +394,40 @@ def compute_dashboard_summary(conn):
             "background_count": dgraph_labels.get("background", 0),
             "fraud_rate_pct": round(dgraph_fraud / dgraph_labeled_total * 100, 3) if dgraph_labeled_total else None,
         },
-        "model_status": "not_yet_trained",
+        **compute_model_status(),
+    }
+
+
+def compute_model_status():
+    """Genuinely dynamic — checks for real multi-seed validation results
+    rather than a hardcoded status string, so Dashboard can never again go
+    stale relative to what's actually trained (the exact inconsistency
+    this function replaces)."""
+    import json
+    import os
+
+    data_dir = os.path.join(os.path.dirname(__file__), "..", "..", "streamlit_app", "data")
+    results = {}
+    for key, label in [("ieee_cis", "IEEE-CIS"), ("dgraph_fin", "DGraph-Fin")]:
+        path = os.path.join(data_dir, f"multiseed_{key}.json")
+        if os.path.exists(path):
+            with open(path) as f:
+                data = json.load(f)
+            stacked = data.get("stacked", {})
+            results[key] = {
+                "trained": True,
+                "f1_mean": stacked.get("f1", {}).get("mean"),
+                "f1_std": stacked.get("f1", {}).get("std"),
+                "roc_auc_mean": stacked.get("roc_auc", {}).get("mean"),
+                "seeds_validated": len(data.get("seeds", [])),
+            }
+        else:
+            results[key] = {"trained": False}
+
+    all_trained = all(r.get("trained") for r in results.values())
+    return {
+        "model_status": "trained_and_validated" if all_trained else "partially_trained",
+        "model_validation": results,
     }
 
 

@@ -1,0 +1,22 @@
+{
+  "accuracy": 0.9641,
+  "precision": 0.486,
+  "recall": 0.4743,
+  "f1": 0.4801,
+  "roc_auc": 0.8796,
+  "pr_auc": 0.4892,
+  "confusion_matrix": [
+    [
+      83927,
+      1555
+    ],
+    [
+      1629,
+      1470
+    ]
+  ],
+  "dataset": "IEEE-CIS Transactions",
+  "trained_at": "2026-08-29 16:11 UTC",
+  "epochs_trained": 5,
+  "web_app_url": "http://localhost:5173/investigate"
+}
