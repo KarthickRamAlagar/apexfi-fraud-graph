@@ -14,6 +14,11 @@ UPI/IMPS cross-channel fraud problem. These are genuine, structurally
 representative datasets, not literal UPI transaction logs, and this project
 does not claim otherwise.
 
+**Live resources:**
+- Trained models on Hugging Face Hub: https://huggingface.co/karthifde/apexfi-fraud-detection
+- Reproducible Kaggle notebook: https://www.kaggle.com/code/karthifde/notebookd612b11733
+- DGraph-Fin dataset on Kaggle: https://www.kaggle.com/datasets/karthifde/dgraph-fin-fraud-detection-network-data
+
 ---
 
 ## What's actually built
@@ -66,6 +71,33 @@ controlled periodic retraining pipeline using verified, labeled outcomes.
 
 ---
 
+## Third, independent experiment: Ethereum blockchain fraud
+
+A separate, standalone validation of the same explainable methodology
+(leak-free feature engineering, LightGBM, SHAP) on a structurally
+different real-world domain — real Ethereum blockchain accounts, not UPI
+transactions or DGraph-Fin's account network.
+
+**Deliberately not merged into the main pipeline** — blockchain and UPI
+are genuinely different payment systems with no real shared identity.
+This is a third, independent proof point that the same methodology
+generalizes, not a technical integration.
+
+- **Dataset:** "Ethereum Fraud Detection Dataset" (Kaggle, vagifa) — 9,841
+  real Ethereum accounts, real `FLAG` label, 22.14% real fraud rate
+- **Real test-set results:** Precision 0.9502, Recall 0.9327, F1 0.9414,
+  ROC-AUC 0.9933, PR-AUC 0.9834
+- **Exposed through its own web app page**, reusing the main project's
+  established UI patterns
+
+**Why the numbers are so much higher here — an honest note:** this is a
+smaller, more balanced, and more inherently separable problem than
+IEEE-CIS or DGraph-Fin (22% fraud vs. 3.5%/1.27%; ~9.8K accounts vs.
+590K/3.7M), not evidence of a better model. It demonstrates the same
+proven approach working cleanly a third time, on a third kind of data.
+
+---
+
 ## Folder layout (current)
 
 ```
@@ -86,15 +118,20 @@ upi-fraud-gnn/
 │                                        # backend.services.export_snapshot when missing
 ├── backend/                             # FastAPI app
 │   ├── routers/                           # dashboard, datasets, eda, analytics, investigate,
-│   │                                        # ask, new_transaction, dgraph_fin_score
+│   │                                        # ask, new_transaction, dgraph_fin_score,
+│   │                                        # ethereum_fraud
 │   └── services/                            # fraud_predictor, new_transaction_predictor_service,
-│                                              # dgraph_fin_predictor_service, precompute_summaries
+│                                              # dgraph_fin_predictor_service,
+│                                              # ethereum_fraud_predictor_service,
+│                                              # precompute_summaries
 ├── frontend/                                  # React app (Vite)
 │   └── src/pages/                               # Dashboard, Investigate, ScoreNewTransaction,
-│                                                  # ScoreUnlabeledAccount, Analytics, EDA, AskYourData
+│                                                  # ScoreUnlabeledAccount, EthereumFraud,
+│                                                  # Analytics, EDA, AskYourData
 ├── ml/                                            # graph construction, training, inference, validation
 │   ├── build_ieee_cis_graph_data.py / build_dgraph_fin_graph_data.py
 │   ├── train_*_baseline.py / train_*_gnn.py       # LightGBM / GraphSAGE training
+│   ├── train_ethereum_fraud.py                     # third experiment, standalone
 │   ├── stack_*.py                                  # logistic stacking
 │   ├── multiseed_*.py                               # 3-seed statistical validation
 │   ├── inference.py / dgraph_fin_inference.py       # real-time prediction for existing records
@@ -120,8 +157,8 @@ just a different kind than a conventional `tests/` folder implies.
 
 Trained model checkpoints (`ml/checkpoints/*.pt`, `*.txt`, `*.pkl`) are
 **not** committed to this repo — they're large binaries better suited to a
-model registry. Find them on Hugging Face Hub: *(link to be added once
-published)*.
+model registry. Real, published weights (IEEE-CIS and DGraph-Fin):
+**https://huggingface.co/karthifde/apexfi-fraud-detection**
 
 ---
 
@@ -200,8 +237,11 @@ underlying structure of the data.**
   trains under full supervision (857,920 real labeled examples), which is
   a different, not-comparable task.
 
+**A real, empirically observed generalization gap worth stating too:** a
+simplified reproduction of the IEEE-CIS model (see the Kaggle notebook
+above) scored ROC-AUC 0.93 on an internal random-split test, but only
+0.733 on the actual official competition test set — concrete, measured
+evidence for the random-vs-temporal-split caveat above, not just an
+assumed risk.
+
 ---
-
-## License
-
-*(add your chosen license here)*
