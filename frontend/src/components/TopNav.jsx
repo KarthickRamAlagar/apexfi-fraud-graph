@@ -1,7 +1,7 @@
-import { useState, useEffect } from 'react'
-import { NavLink, useNavigate } from 'react-router-dom'
+import { useState, useEffect, useRef } from 'react'
+import { NavLink, useNavigate, useLocation } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
-import { Search, Network } from 'lucide-react'
+import { Search, Network, ChevronDown } from 'lucide-react'
 import { api } from '@/lib/api'
 import { cn } from '@/lib/utils'
 
@@ -14,6 +14,10 @@ const NAV_ITEMS = [
   { path: '/analytics', label: 'Analytics' },
   { path: '/eda', label: 'EDA' },
   { path: '/ask', label: 'Ask your data' },
+]
+
+const MORE_ITEMS = [
+  { path: '/ethereum-fraud', label: 'Blockchain Fraud (Experiment)' },
 ]
 
 export default function TopNav() {
@@ -45,6 +49,7 @@ export default function TopNav() {
               {item.label}
             </NavLink>
           ))}
+          <MoreMenu />
         </nav>
 
         <div className="flex items-center gap-3 ml-auto">
@@ -52,6 +57,54 @@ export default function TopNav() {
         </div>
       </div>
     </header>
+  )
+}
+
+function MoreMenu() {
+  const [open, setOpen] = useState(false)
+  const location = useLocation()
+  const ref = useRef(null)
+  const isActiveGroup = MORE_ITEMS.some((item) => location.pathname === item.path)
+
+  useEffect(() => {
+    function onClickOutside(e) {
+      if (ref.current && !ref.current.contains(e.target)) setOpen(false)
+    }
+    document.addEventListener('mousedown', onClickOutside)
+    return () => document.removeEventListener('mousedown', onClickOutside)
+  }, [])
+
+  return (
+    <div className="relative" ref={ref}>
+      <button
+        onClick={() => setOpen((o) => !o)}
+        className={cn(
+          'flex items-center gap-1 rounded-md px-3 py-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground',
+          (isActiveGroup || open) && 'bg-secondary text-foreground'
+        )}
+      >
+        More <ChevronDown size={14} className={cn('transition-transform', open && 'rotate-180')} />
+      </button>
+      {open && (
+        <div className="absolute left-0 z-30 w-64 p-1 mt-1 border rounded-lg shadow-xl border-border bg-card">
+          {MORE_ITEMS.map((item) => (
+            <NavLink
+              key={item.path}
+              to={item.path}
+              onClick={() => setOpen(false)}
+              className={({ isActive }) =>
+                cn(
+                  'block rounded-md px-3 py-2 text-sm text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground',
+                  isActive && 'bg-secondary text-foreground'
+                )
+              }
+            >
+              {item.label}
+            </NavLink>
+          ))}
+        </div>
+      )}
+    </div>
   )
 }
 
@@ -66,9 +119,6 @@ function GlobalSearch() {
     return () => clearTimeout(t)
   }, [query])
 
-  // real search across both datasets, in parallel — only fires once
-  // there's at least 2 digits typed, same debounce discipline used
-  // elsewhere in the app
   const { data: txData } = useQuery({
     queryKey: ['global-search-tx', debounced],
     queryFn: () => api.investigateSearch(debounced),

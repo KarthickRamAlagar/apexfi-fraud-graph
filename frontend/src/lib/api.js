@@ -36,4 +36,7 @@ export const api = {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ question, language }),
     }),
+ethereumFraudSamples: () => fetchJson('/api/ethereum-fraud/samples'),
+ethereumFraudSearch: (q) => fetchJson(`/api/ethereum-fraud/search?q=${encodeURIComponent(q)}`),
+ethereumFraudScore: (address) => fetchJson(`/api/ethereum-fraud/score/${address}`),
 }

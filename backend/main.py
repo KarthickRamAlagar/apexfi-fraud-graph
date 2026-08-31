@@ -1,7 +1,17 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from backend.routers import dashboard, datasets, eda, analytics, investigate, ask, new_transaction, dgraph_fin_score
+from backend.routers import (
+    dashboard,
+    datasets,
+    eda,
+    analytics,
+    investigate,
+    ask,
+    new_transaction,
+    dgraph_fin_score,
+    ethereum_fraud,
+)
 
 app = FastAPI(title="ApexFi API")
 
@@ -20,6 +30,7 @@ app.include_router(investigate.router)
 app.include_router(ask.router)
 app.include_router(new_transaction.router)
 app.include_router(dgraph_fin_score.router)
+app.include_router(ethereum_fraud.router)
 
 
 @app.get("/health")

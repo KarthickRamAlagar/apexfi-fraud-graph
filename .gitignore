@@ -31,3 +31,7 @@ frontend/dist/
 # ML model artifacts (large binaries — go to Hugging Face Hub instead)
 ml/checkpoints/
 *.pt
+
+# large exported CSVs (already uploaded to Kaggle, kept locally only)
+dgraph_fin_edges.csv
+dgraph_fin_nodes.csv
