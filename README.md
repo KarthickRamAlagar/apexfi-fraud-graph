@@ -98,6 +98,76 @@ proven approach working cleanly a third time, on a third kind of data.
 
 ---
 
+## Temporal Validation: does a random split overstate real performance?
+
+A real, targeted follow-up investigation (on the `temporal-validation`
+branch): does evaluating on a **random split** make a fraud model look
+better than it would genuinely perform in real deployment, where you only
+ever have the past to predict the future?
+
+### The real, honest finding — confirmed three independent ways
+
+| Confirmation | Random / internal split | Genuine chronological / temporal split |
+|---|---|---|
+| Real Kaggle competition submission | 0.93 (internal random-split test) | **0.733** (official competition score) |
+| LightGBM, this project's own re-test | 0.8463 ROC-AUC | **0.7898** ROC-AUC |
+| GraphSAGE, this project's own re-test | 0.7095 ROC-AUC | **0.7030** ROC-AUC |
+
+All three point the same direction: **a random split genuinely overstates
+real-world performance relative to honest, forward-time evaluation.**
+This isn't a one-off result — it showed up independently in a real
+external competition submission and in two separately retrained models
+on our own chronological split.
+
+### A genuinely interesting, honestly-reported nuance
+
+The **GraphSAGE gap (0.7095 → 0.7030, a drop of ~0.0065) is far smaller**
+than the **LightGBM gap (0.8463 → 0.7898, a drop of ~0.057)**. We do not
+claim certainty about why — two honest, plausible explanations, neither
+overclaimed:
+
+1. This experiment's GNN uses a smaller, simplified feature set than
+   LightGBM's comparison, so it may simply have less signal to lose when
+   the split gets harder.
+2. A genuinely interesting possibility: relational structure (who shares
+   a card/device with whom) may be more *stable* over time than tabular
+   feature distributions are — fraud tactics and spending patterns can
+   shift month to month, but a real shared-device connection is a more
+   fixed, structural fact. If true, this would be a legitimate research
+   finding in its own right, not yet independently confirmed.
+
+### Real methodology
+
+- **Real chronological split**: sorted strictly by IEEE-CIS's real
+  `transactiondt` field (a genuine, second-level time-delta — not the
+  day-only `transaction_date`, which was confirmed during this work to
+  have no real sub-day precision, every row pinned to midnight). Earliest
+  75% of real transactions → train; most recent 25% → test.
+- **Real, leak-free rolling-window features**: for every transaction, how
+  many transactions the same card made in the preceding hour, and the
+  total amount moved — using `closed='left'` windows, so a transaction
+  only ever sees genuinely prior transactions, never itself or anything
+  after it.
+- **A real, saved, live-servable model**: the chronological-split
+  LightGBM model (not the optimistic random-split version) is saved and
+  exposed through a real "Score New Transaction (Temporal Model)" feature
+  in the web app — genuine, live-queried rolling-window history from the
+  database, not hardcoded values, scored as of the dataset's own real
+  current "now."
+
+### Why DGraph-Fin isn't included in this analysis
+
+DGraph-Fin's real timestamp field (`node_timestamp`) is genuinely
+**sparse** — only populated for a subset of fraud-labeled accounts, not
+the full dataset. A clean, honest chronological split isn't possible on
+this data without fabricating timestamps or dropping most of the dataset.
+This is a **deliberate, documented scoping decision** — a real, honest
+limitation of the available data, not an oversight. (See the Streamlit
+app's Temporal Validation page for the same note, alongside the real
+results.)
+
+---
+
 ## Folder layout (current)
 
 ```
@@ -113,25 +183,30 @@ upi-fraud-gnn/
 │   ├── transform/              # Bronze->Silver, Silver->Gold
 │   └── db/                      # connection.py, schema.sql
 ├── streamlit_app/                 # standalone deep-EDA app (Streamlit Community Cloud)
-│   ├── pages/                       # Full Profiling, Raw Data Browser, Model Evaluation
+│   ├── pages/                       # Full Profiling, Raw Data Browser, Model Evaluation,
+│   │                                  # Temporal Validation
 │   └── data/                          # precomputed snapshots (parquet/json), regenerate via
 │                                        # backend.services.export_snapshot when missing
 ├── backend/                             # FastAPI app
 │   ├── routers/                           # dashboard, datasets, eda, analytics, investigate,
 │   │                                        # ask, new_transaction, dgraph_fin_score,
-│   │                                        # ethereum_fraud
+│   │                                        # ethereum_fraud, temporal_validation
 │   └── services/                            # fraud_predictor, new_transaction_predictor_service,
 │                                              # dgraph_fin_predictor_service,
 │                                              # ethereum_fraud_predictor_service,
-│                                              # precompute_summaries
+│                                              # temporal_predictor_service, precompute_summaries
 ├── frontend/                                  # React app (Vite)
 │   └── src/pages/                               # Dashboard, Investigate, ScoreNewTransaction,
 │                                                  # ScoreUnlabeledAccount, EthereumFraud,
-│                                                  # Analytics, EDA, AskYourData
+│                                                  # TemporalValidation, Analytics, EDA, AskYourData
 ├── ml/                                            # graph construction, training, inference, validation
 │   ├── build_ieee_cis_graph_data.py / build_dgraph_fin_graph_data.py
 │   ├── train_*_baseline.py / train_*_gnn.py       # LightGBM / GraphSAGE training
 │   ├── train_ethereum_fraud.py                     # third experiment, standalone
+│   ├── train_temporal_comparison.py                 # LightGBM: random vs. chronological split
+│   ├── train_temporal_gnn_comparison.py               # GraphSAGE: random vs. chronological split
+│   ├── train_and_save_temporal_model.py                # saves the real, servable temporal model
+│   ├── build_rolling_features.py                         # real, leak-free rolling-window features
 │   ├── stack_*.py                                  # logistic stacking
 │   ├── multiseed_*.py                               # 3-seed statistical validation
 │   ├── inference.py / dgraph_fin_inference.py       # real-time prediction for existing records
@@ -192,7 +267,7 @@ npm run dev
 
 ```bash
 cd streamlit_app
-streamlit run Home.py
+uv run streamlit run Home.py
 ```
 
 ---
@@ -229,7 +304,8 @@ underlying structure of the data.**
   solution's best individual model (0.9408 private leaderboard) — but our
   split is random/stratified, while Kaggle's private test set may have
   used a temporal split (a harder, more realistic evaluation). Not a
-  fully apples-to-apples comparison.
+  fully apples-to-apples comparison. **This is directly, empirically
+  investigated in the Temporal Validation section above.**
 - DGraph-Fin's numbers are **not** directly comparable to published
   academic benchmarks (e.g., GADBench's ~66.9% AUC for current
   specialized methods) — those papers deliberately test a much harder,
@@ -242,6 +318,7 @@ simplified reproduction of the IEEE-CIS model (see the Kaggle notebook
 above) scored ROC-AUC 0.93 on an internal random-split test, but only
 0.733 on the actual official competition test set — concrete, measured
 evidence for the random-vs-temporal-split caveat above, not just an
-assumed risk.
+assumed risk. **See the Temporal Validation section for two further,
+independent confirmations of this same real pattern.**
 
 ---

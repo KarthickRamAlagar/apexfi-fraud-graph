@@ -18,6 +18,7 @@ const NAV_ITEMS = [
 
 const MORE_ITEMS = [
   { path: '/ethereum-fraud', label: 'Blockchain Fraud (Experiment)' },
+  { path: '/temporal-validation', label: 'Temporal Validation (Research)' },
 ]
 
 export default function TopNav() {

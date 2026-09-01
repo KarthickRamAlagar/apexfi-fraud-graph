@@ -187,3 +187,4 @@ Stage 1 (ETL — Bronze, Silver, and Gold) is now fully complete for all data so
 ---
 
 *This report reflects project state as of the completion of Stage 1 (ETL) in full — Bronze, Silver, and Gold. Update after each major stage.*
+

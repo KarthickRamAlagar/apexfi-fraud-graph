@@ -12,6 +12,7 @@ import EDA from '@/pages/EDA'
 import AskYourData from '@/pages/AskYourData'
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools'
 import EthereumFraud from '@/pages/EthereumFraud'
+import TemporalValidation from '@/pages/TemporalValidation'
 
 // Real Gold-layer data doesn't change between page visits within a
 // session (it's precomputed / refreshed only when you re-run the
@@ -57,6 +58,7 @@ export default function App() {
               <Route path="/eda" element={<EDA />} />
               <Route path="/ask" element={<AskYourData />} />
               <Route path="/ethereum-fraud" element={<EthereumFraud />} />
+              <Route path="/temporal-validation" element={<TemporalValidation />} />
             </Routes>
           </div>
         </HashRouter>
