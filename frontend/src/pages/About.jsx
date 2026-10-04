@@ -148,6 +148,7 @@ export default function About() {
         )}
 
         {active === 'security' && (
+          <>
           <div className="grid grid-cols-1 gap-5 xl:grid-cols-2">
               <Section title="Security measures implemented" icon={ShieldCheck}>
                 <ul>
@@ -155,6 +156,8 @@ export default function About() {
                   <li><b>Security headers</b> on every response (no sniffing, no framing, no referrer, strict content policy).</li>
                   <li><b>Rate limiting</b> per client and route group; the Ask and PDF routes are the strictest.</li>
                   <li><b>Request size cap</b> of 1 MB.</li>
+              <li><b>Shared rate limiting</b> through Redis when several servers run (optional; falls back to in-memory if Redis is down).</li>
+              <li><b>HTTPS support:</b> HSTS in production and an optional http-to-https redirect behind a proxy. The certificate itself comes from the proxy or host.</li>
                   <li><b>Input validation</b> on all request bodies, search boxes and limits.</li>
                   <li><b>Safe errors:</b> users see a generic message plus a request ID; details stay in the server log.</li>
                   <li><b>Ask-your-data guard:</b> generated SQL must be a single SELECT, runs on a read-only database role with a timeout and a row cap.</li>
@@ -164,15 +167,30 @@ export default function About() {
                 <p className="mt-2 text-xs">These are basic hardening steps for a prototype, covered by automated tests. No formal compliance (PCI-DSS, RBI) is claimed.</p>
               </Section>
               <Section title="Planned, not built yet" icon={Hourglass}>
-                <ul>
-                  <li>User login and role-based access.</li>
-                  <li>Shared (Redis) rate limiting and TLS for a multi-server deployment.</li>
-                  <li>Independent out-of-time validation on external data.</li>
-                  <li>AI assistant overlay and a full-metrics Streamlit page.</li>
-                  <li>Public deployment (frontend and Streamlit).</li>
-                </ul>
-              </Section>
+              <ul>
+                <li>User login and role-based access (design below).</li>
+                <li>Audit log of who scored or downloaded what, and a secrets manager.</li>
+                <li>Independent out-of-time validation on external data.</li>
+                <li>AI assistant overlay.</li>
+                <li>Public deployment (frontend and Streamlit) on a trimmed dataset.</li>
+              </ul>
+              <p className="mt-3 font-medium text-foreground">Planned roles (design only, not implemented)</p>
+              <div className="overflow-x-auto">
+                <table className="w-full mt-1 text-xs">
+                  <thead><tr className="text-left text-muted-foreground"><th className="py-1.5 font-normal">Role</th><th className="font-normal">Who</th><th className="font-normal">Would be able to</th></tr></thead>
+                  <tbody>
+                    <RoleRow r="Viewer" w="Public or demo visitor" c="Dashboard, EDA, About, SDG page and read-only reports. No scoring, no Ask." />
+                    <RoleRow r="Fraud analyst" w="Operations staff" c="Everything a viewer can, plus Investigate, Score New, Score Account, model comparison, PDF reports and Ask your data." />
+                    <RoleRow r="Model risk / data scientist" w="Validation team" c="Everything an analyst can, plus temporal reports, thresholds, ablation and the Economics inputs." />
+                    <RoleRow r="Auditor" w="Compliance" c="Read-only access to reports and PDFs, plus the audit log. No scoring." />
+                    <RoleRow r="Admin" w="System owner" c="User management, threshold and system settings; threshold changes need a second approver (maker-checker)." />
+                  </tbody>
+                </table>
+              </div>
+            </Section>
           </div>
+          <RolesPlan />
+          </>
         )}
 
         {active === 'team' && (
@@ -222,6 +240,9 @@ const Box = ({ t, tone, children }) => (
 const Row = ({ a, b, c, d }) => (
   <tr className="border-t border-border/50"><td className="py-1.5 font-sans text-foreground">{a}</td><td>{b}</td><td>{c}</td><td>{d}</td></tr>
 )
+const RoleRow = ({ r, w, c }) => (
+  <tr className="align-top border-t border-border/50"><td className="py-1.5 pr-3 font-medium text-foreground whitespace-nowrap">{r}</td><td className="pr-3 whitespace-nowrap">{w}</td><td className="py-1.5">{c}</td></tr>
+)
 const Item = ({ k, v }) => (
   <div><dt className="text-xs text-muted-foreground">{k}</dt><dd className="font-medium text-foreground">{v}</dd></div>
 )
@@ -235,5 +256,42 @@ function Flow({ steps }) {
         </span>
       ))}
     </div>
+  )
+}
+
+// Design only: none of this is implemented yet (login and roles are on the Planned list).
+const ROLE_ROWS = [
+  ['Viewer', 'Public / demo visitor', true, false, false, false, false],
+  ['Fraud analyst', 'Bank operations staff', true, true, false, false, false],
+  ['Model risk / data scientist', 'ML and validation team', true, true, true, false, false],
+  ['Auditor', 'Compliance and audit', true, false, true, true, false],
+  ['Admin', 'System owner', true, true, true, true, true],
+]
+const ROLE_COLS = ['Dashboard, EDA, About, SDG', 'Investigate, Score, Compare, PDF, Ask', 'Temporal reports, thresholds, Economics inputs', 'Audit log, read-only reports', 'User and settings management']
+
+function RolesPlan() {
+  return (
+    <Section title="Planned roles and access (design only, not built)" icon={Users}>
+      <p>Each role would see only the parts of the app it needs. Login, roles and an audit log are on the roadmap; today the app has no login.</p>
+      <div className="mt-2 overflow-x-auto">
+        <table className="w-full text-xs">
+          <thead>
+            <tr className="text-left text-muted-foreground">
+              <th className="py-1.5 pr-3 font-normal">Role</th>
+              {ROLE_COLS.map((c) => <th key={c} className="px-2 font-normal text-center">{c}</th>)}
+            </tr>
+          </thead>
+          <tbody>
+            {ROLE_ROWS.map(([name, who, ...flags]) => (
+              <tr key={name} className="border-t border-border/50">
+                <td className="py-2 pr-3"><div className="font-medium text-foreground">{name}</div><div className="text-[11px]">{who}</div></td>
+                {flags.map((f, i) => <td key={i} className={cn('px-2 text-center', f ? 'text-risk-low' : 'text-muted-foreground/40')}>{f ? '●' : '—'}</td>)}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      <p className="mt-2 text-xs">Sensitive changes, such as a new decision threshold, would follow a maker-checker rule: one person proposes it and a different person approves it.</p>
+    </Section>
   )
 }
