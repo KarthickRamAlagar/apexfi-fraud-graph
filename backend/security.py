@@ -7,9 +7,16 @@ What this module does (all of it is implemented and covered by tests/test_securi
   * per-IP, per-route-group rate limiting (429 + Retry-After), in-memory
   * request IDs + a generic 500 handler that never leaks internals
 
-What it does NOT do (honestly "Planned"): user authentication / roles,
-a shared rate-limit store for multi-worker deployments (use Redis), TLS
-(terminate it at NGINX / the hosting platform), or any formal compliance.
+Multi-server deployment:
+  * RATE_LIMIT_REDIS_URL=redis://host:6379/0 makes the rate limiter shared across
+    workers / servers (Redis). Unset = in-memory (fine for one process). If Redis is
+    unreachable the limiter falls back to in-memory and logs a warning (fail-open).
+  * TLS itself is terminated by the reverse proxy / hosting platform (see docs/DEPLOYMENT.md).
+    The app adds HSTS (in production, over HTTPS) and can redirect http -> https
+    (FORCE_HTTPS=true, only behind a trusted proxy: TRUST_PROXY=true).
+
+What it does NOT do (honestly "Planned"): user authentication / roles
+or any formal compliance.
 """
 import os
 import time
@@ -17,7 +24,7 @@ import uuid
 from collections import defaultdict, deque
 
 from fastapi import Request
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, RedirectResponse
 from starlette.middleware.base import BaseHTTPMiddleware
 
 DEFAULT_ORIGINS = "http://localhost:5173,http://localhost:3000"
@@ -47,6 +54,8 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
         response.headers["X-Frame-Options"] = "DENY"
         response.headers["Referrer-Policy"] = "no-referrer"
         response.headers["Permissions-Policy"] = "camera=(), geolocation=(), payment=()"
+        if is_production() and _is_https(request):
+            response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains"
         if not request.url.path.startswith(self.DOC_PATHS):
             response.headers["Content-Security-Policy"] = "default-src 'none'; frame-ancestors 'none'"
         return response
@@ -90,14 +99,93 @@ def _client_ip(request: Request) -> str:
     return request.client.host if request.client else "unknown"
 
 
-class RateLimitMiddleware(BaseHTTPMiddleware):
-    """Sliding-window limiter, in memory (single process)."""
+class MemoryRateBackend:
+    """Sliding-window limiter in this process's memory."""
 
-    def __init__(self, app, rules=None, clock=time.monotonic):
-        super().__init__(app)
-        self.rules = rules or RATE_RULES
+    def __init__(self, clock=time.monotonic):
         self.clock = clock
         self.hits = defaultdict(deque)
+
+    async def hit(self, key: str, limit: int, window: int):
+        """Returns (allowed, retry_after_seconds)."""
+        now = self.clock()
+        q = self.hits[key]
+        while q and now - q[0] > window:
+            q.popleft()
+        if len(q) >= limit:
+            return False, max(1, int(window - (now - q[0])))
+        q.append(now)
+        if len(self.hits) > 5000:  # bound memory: drop idle keys
+            for k in [k for k, v in self.hits.items() if not v or now - v[-1] > 300]:
+                self.hits.pop(k, None)
+        return True, 0
+
+
+# Atomic sliding-window log in Redis: drop old hits, count, then add this one if allowed.
+_REDIS_LUA = """
+local key = KEYS[1]
+local now = tonumber(ARGV[1])
+local window = tonumber(ARGV[2])
+local limit = tonumber(ARGV[3])
+local member = ARGV[4]
+redis.call('ZREMRANGEBYSCORE', key, 0, now - window)
+local count = redis.call('ZCARD', key)
+if count >= limit then
+  local oldest = redis.call('ZRANGE', key, 0, 0, 'WITHSCORES')
+  local retry = math.ceil(window - (now - tonumber(oldest[2])))
+  if retry < 1 then retry = 1 end
+  return {0, retry}
+end
+redis.call('ZADD', key, now, member)
+redis.call('PEXPIRE', key, window * 1000 + 1000)
+return {1, 0}
+"""
+
+
+class RedisRateBackend:
+    """Sliding-window limiter shared by every worker / server through Redis.
+    If Redis errors, it falls back to a local in-memory limiter so the API stays up."""
+
+    def __init__(self, url: str, fallback=None):
+        import redis.asyncio as aioredis  # imported lazily: only needed when Redis is configured
+
+        self.client = aioredis.from_url(url, socket_connect_timeout=1, socket_timeout=1)
+        self.script = self.client.register_script(_REDIS_LUA)
+        self.fallback = fallback or MemoryRateBackend()
+        self._warned = False
+
+    async def hit(self, key: str, limit: int, window: int):
+        try:
+            now = time.time()
+            member = f"{now}:{uuid.uuid4().hex[:8]}"
+            allowed, retry = await self.script(keys=[f"apexfi:rl:{key}"], args=[now, window, limit, member])
+            self._warned = False
+            return bool(allowed), int(retry)
+        except Exception as e:  # network down, auth failure, etc.
+            if not self._warned:
+                print(f"[security] Redis rate limiter unavailable, using in-memory fallback: {type(e).__name__}: {e}")
+                self._warned = True
+            return await self.fallback.hit(key, limit, window)
+
+
+def make_rate_backend(clock=time.monotonic):
+    url = os.getenv("RATE_LIMIT_REDIS_URL", "").strip()
+    if url:
+        try:
+            print("[security] rate limiting: shared Redis backend")
+            return RedisRateBackend(url, MemoryRateBackend(clock))
+        except Exception as e:
+            print(f"[security] could not start Redis backend ({type(e).__name__}: {e}); using in-memory")
+    return MemoryRateBackend(clock)
+
+
+class RateLimitMiddleware(BaseHTTPMiddleware):
+    """Per client IP and route group. In-memory by default, shared via Redis when configured."""
+
+    def __init__(self, app, rules=None, clock=time.monotonic, backend=None):
+        super().__init__(app)
+        self.rules = rules or RATE_RULES
+        self.backend = backend or make_rate_backend(clock)
 
     def _rule_for(self, path):
         for prefix, limit, window in self.rules:
@@ -112,23 +200,32 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
         if rule is None:
             return await call_next(request)
         prefix, limit, window = rule
-        key = (_client_ip(request), prefix)
-        now = self.clock()
-        q = self.hits[key]
-        while q and now - q[0] > window:
-            q.popleft()
-        if len(q) >= limit:
-            retry = max(1, int(window - (now - q[0])))
+        allowed, retry = await self.backend.hit(f"{_client_ip(request)}|{prefix}", limit, window)
+        if not allowed:
             return JSONResponse(
                 {"detail": "Too many requests. Please wait a moment and try again."},
                 status_code=429,
                 headers={"Retry-After": str(retry)},
             )
-        q.append(now)
-        if len(self.hits) > 5000:  # bound memory: drop idle keys
-            for k in [k for k, v in self.hits.items() if not v or now - v[-1] > 300]:
-                self.hits.pop(k, None)
         return await call_next(request)
+
+
+def _is_https(request: Request) -> bool:
+    if request.url.scheme == "https":
+        return True
+    if os.getenv("TRUST_PROXY", "").lower() in ("1", "true", "yes"):
+        return request.headers.get("x-forwarded-proto", "").split(",")[0].strip().lower() == "https"
+    return False
+
+
+class HTTPSRedirectMiddleware(BaseHTTPMiddleware):
+    """FORCE_HTTPS=true: send plain-http requests to https. Only valid behind a trusted proxy
+    that sets X-Forwarded-Proto (TRUST_PROXY=true); /health stays open for platform probes."""
+
+    async def dispatch(self, request: Request, call_next):
+        if request.url.path == "/health" or _is_https(request):
+            return await call_next(request)
+        return RedirectResponse(str(request.url.replace(scheme="https")), status_code=308)
 
 
 async def unhandled_exception_handler(request: Request, exc: Exception):
@@ -150,6 +247,8 @@ def install_security(app):
     app.add_middleware(RequestSizeLimitMiddleware)
     app.add_middleware(SecurityHeadersMiddleware)
     app.add_middleware(RequestIdMiddleware)
+    if os.getenv("FORCE_HTTPS", "").lower() in ("1", "true", "yes"):
+        app.add_middleware(HTTPSRedirectMiddleware)
     app.add_middleware(
         CORSMiddleware,
         allow_origins=allowed_origins(),

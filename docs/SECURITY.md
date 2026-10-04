@@ -11,8 +11,10 @@
 - All SQL in the routers is parameterised.
 - `APP_ENV=production` hides `/docs`, `/redoc`, `/openapi.json` and refuses the default read-only DB password.
 
+- Shared rate limiting: set `RATE_LIMIT_REDIS_URL` and every worker/server uses one Redis-backed sliding window (tested with two simulated servers against a real Redis). If Redis is down the limiter falls back to in-memory and logs a warning.
+- HTTPS support: in production the app sends `Strict-Transport-Security` over HTTPS and, with `FORCE_HTTPS=true` behind a trusted proxy (`TRUST_PROXY=true`), redirects http to https. The certificate itself comes from the reverse proxy or hosting platform; see `docs/DEPLOYMENT.md`.
+
 ## Planned (NOT implemented)
 - User login and role-based access.
-- Shared rate-limit store (Redis) for multi-worker deployments; the current limiter is per process.
-- TLS (terminate at NGINX or the hosting platform), secrets manager, audit log.
+- Secrets manager and an audit log.
 - No formal compliance (PCI-DSS, RBI, etc.) is claimed.

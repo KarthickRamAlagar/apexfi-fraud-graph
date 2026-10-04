@@ -34,6 +34,7 @@ backend = [
     "uvicorn[standard]>=0.31",
     "pydantic>=2.9",
     "reportlab>=4.0",     # server-side PDF comparison reports
+    "redis>=8.1.0",
 ]
 
 # Stage 5: ML — graph construction, GNN training, explainability
