@@ -5,7 +5,10 @@ covering all of the baseline evaluation checklist's real results."""
 import json
 import os
 
+from typing import Optional
+
 from fastapi import APIRouter, HTTPException
+from pydantic import BaseModel, ConfigDict, Field
 
 from backend.services.temporal_predictor_service import get_temporal_predictor
 
@@ -67,8 +70,19 @@ def get_full_report():
     return report
 
 
+class TemporalScoreRequest(BaseModel):
+    model_config = ConfigDict(extra="allow")  # frequency columns vary; values are capped below
+
+    card1: Optional[int] = Field(default=None, ge=0, le=10**9)
+    deviceinfo: Optional[str] = Field(default=None, max_length=200)
+    transactiondt: Optional[int] = Field(default=None, ge=0, le=10**10)
+
+
 @router.post("/score")
-def score_transaction(payload: dict):
+def score_transaction(req: TemporalScoreRequest):
+    payload = req.model_dump(exclude_none=False)
+    if len(payload) > 40 or any(isinstance(v, str) and len(v) > 200 for v in payload.values()):
+        raise HTTPException(422, "Input too large.")
     try:
         predictor = get_temporal_predictor()
         result = predictor.predict(payload)

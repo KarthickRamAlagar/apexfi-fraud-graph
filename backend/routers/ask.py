@@ -17,7 +17,7 @@ Safety guards, in order:
 import re
 
 from fastapi import APIRouter, HTTPException
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from sqlalchemy import text
 
 from backend.services.llm_providers import call_llm_with_fallback
@@ -79,8 +79,8 @@ LANGUAGE_NAMES = {
 
 
 class AskRequest(BaseModel):
-    question: str
-    language: str = "en-IN"
+    question: str = Field(min_length=3, max_length=500)
+    language: str = Field(default="en-IN", max_length=16)
 
 
 def extract_sql(raw_response):
@@ -121,14 +121,16 @@ def ask_question(req: AskRequest):
     try:
         raw_sql, provider = call_llm_with_fallback(SCHEMA_DESCRIPTION, sql_prompt)
     except RuntimeError as e:
-        raise HTTPException(503, str(e))
+        print(f"[ask] LLM provider failure: {e}")
+        raise HTTPException(503, "The AI assistant is unavailable right now. Please try again shortly.")
 
     sql = extract_sql(raw_sql)
 
     try:
         validate_sql(sql)
     except ValueError as e:
-        raise HTTPException(400, f"Generated query failed safety validation: {e}")
+        print(f"[ask] SQL rejected by validator: {e}")
+        raise HTTPException(400, "That question could not be turned into a safe read-only query. Please rephrase it.")
 
     engine = get_readonly_engine()
     try:
@@ -138,7 +140,8 @@ def ask_question(req: AskRequest):
             rows = result.fetchmany(MAX_ROWS)
             columns = list(result.keys())
     except Exception as e:
-        raise HTTPException(400, f"Query execution failed: {e}")
+        print(f"[ask] query execution failed: {e}")
+        raise HTTPException(400, "The query could not be run. Please rephrase your question.")
 
     results = [dict(zip(columns, row)) for row in rows]
 

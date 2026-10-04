@@ -6,7 +6,7 @@ New Transaction (DGraph-Fin's edges are direct pre-existing user
 relationships, not attribute-derived, so there's no honest way to build
 connections for a truly synthetic new account).
 """
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Query
 from sqlalchemy import text
 
 from backend.db import engine
@@ -16,7 +16,7 @@ router = APIRouter(prefix="/api/dgraph-fin", tags=["dgraph-fin"])
 
 
 @router.get("/search")
-def search_accounts(q: str, limit: int = 8):
+def search_accounts(q: str = Query(max_length=40), limit: int = Query(8, ge=1, le=25)):
     """Real search across all 3.7M DGraph-Fin accounts, by ID prefix —
     not limited to the 8 sample chips shown on the page.
     """

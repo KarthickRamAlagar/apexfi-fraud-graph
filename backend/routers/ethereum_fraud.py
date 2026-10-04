@@ -1,7 +1,7 @@
 """Router for the Ethereum blockchain fraud experiment -- a real, third,
 independent proof point for ApexFi's explainable fraud-detection
 methodology, kept deliberately separate from the UPI/IMPS pipeline."""
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Query, Path
 
 from backend.services.ethereum_fraud_predictor_service import get_ethereum_fraud_predictor
 
@@ -15,7 +15,7 @@ def get_samples():
 
 
 @router.get("/search")
-def search(q: str):
+def search(q: str = Query(max_length=60)):
     if not q or len(q) < 3:
         return {"results": []}
     predictor = get_ethereum_fraud_predictor()
@@ -23,7 +23,7 @@ def search(q: str):
 
 
 @router.get("/score/{address}")
-def score(address: str):
+def score(address: str = Path(max_length=60)):
     try:
         predictor = get_ethereum_fraud_predictor()
         result = predictor.predict(address)

@@ -2,7 +2,7 @@
 neighbors (device_shared / card_shared edges), AND real risk prediction
 (stacked LightGBM + GNN model, real SHAP-based explanation).
 """
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Query
 from sqlalchemy import text
 
 from backend.db import engine
@@ -47,7 +47,7 @@ def get_samples():
 
 
 @router.get("/search")
-def search_transactions(q: str, limit: int = 8):
+def search_transactions(q: str = Query(max_length=40), limit: int = Query(8, ge=1, le=25)):
     """Real live search across all 590,540 transactions, by ID prefix —
     used for the Investigate page's autosuggest dropdown. Must be
     registered before /{transaction_id} below, or FastAPI would try to

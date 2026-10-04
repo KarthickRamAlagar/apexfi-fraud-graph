@@ -10,6 +10,7 @@ import TransactionGraph from '@/components/TransactionGraph'
 import { Panel } from '@/components/Panel'
 import { api } from '@/lib/api'
 import { cn } from '@/lib/utils'
+import ModelComparePanel from '@/components/ModelComparePanel'
 
 const PRODUCT_CODES = ['W', 'C', 'R', 'H', 'S']
 const CARD_NETWORKS = ['visa', 'mastercard', 'american express', 'discover']
@@ -346,6 +347,7 @@ export default function ScoreNewTransaction() {
                 <Panel title="Graph Context" icon={Share2}>
                   <GraphContextPanel graphContext={result.graphContext} />
                 </Panel>
+                {mutation.variables && <ModelComparePanel kind="new" payload={mutation.variables} />}
                 <button
                   onClick={handleScoreAnother}
                   className="w-full rounded-lg border border-border py-2.5 text-sm text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"

@@ -344,6 +344,7 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { api } from '@/lib/api'
 import { cn } from '@/lib/utils'
 import LoadingOverlay from '@/components/LoadingOverlay'
+import ModelComparePanel from '@/components/ModelComparePanel'
 
 export default function Investigate() {
   const [searchParams] = useSearchParams()
@@ -549,6 +550,8 @@ if (samples.length === 0 && !error) {
               <PendingBanner>{investigation.riskAssessment.note}</PendingBanner>
             )}
           </Panel>
+
+          {investigation && <ModelComparePanel kind="investigate" transactionId={activeId} />}
         </div>
       </div>
     </div>

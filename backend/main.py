@@ -17,8 +17,8 @@ import time
 from concurrent.futures import ThreadPoolExecutor
 
 from fastapi import FastAPI
-from fastapi.middleware.cors import CORSMiddleware
 
+from backend.security import install_security, is_production
 from backend.routers import (
     dashboard,
     datasets,
@@ -30,16 +30,19 @@ from backend.routers import (
     dgraph_fin_score,
     ethereum_fraud,
     temporal_validation,
+    compare,
 )
 
-app = FastAPI(title="ApexFi API")
-
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["http://localhost:5173", "http://localhost:3000"],
-    allow_methods=["*"],
-    allow_headers=["*"],
+_prod = is_production()
+app = FastAPI(
+    title="ApexFi API",
+    docs_url=None if _prod else "/docs",
+    redoc_url=None if _prod else "/redoc",
+    openapi_url=None if _prod else "/openapi.json",
 )
+
+# CORS, security headers, size cap, rate limit, request IDs, generic 500s
+install_security(app)
 
 app.include_router(dashboard.router)
 app.include_router(datasets.router)
@@ -51,6 +54,7 @@ app.include_router(new_transaction.router)
 app.include_router(dgraph_fin_score.router)
 app.include_router(ethereum_fraud.router)
 app.include_router(temporal_validation.router)
+app.include_router(compare.router)
 
 
 @app.on_event("startup")

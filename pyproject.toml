@@ -33,6 +33,7 @@ backend = [
     "fastapi>=0.115",
     "uvicorn[standard]>=0.31",
     "pydantic>=2.9",
+    "reportlab>=4.0",     # server-side PDF comparison reports
 ]
 
 # Stage 5: ML — graph construction, GNN training, explainability
@@ -53,6 +54,7 @@ llm = [
 ]
 
 dev = [
+    "pypdf>=6.19.0",
     "pytest>=8.3",
     "ruff>=0.6",
 ]

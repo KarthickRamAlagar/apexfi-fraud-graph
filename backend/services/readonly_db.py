@@ -11,7 +11,12 @@ from sqlalchemy import create_engine
 load_dotenv()
 
 READONLY_USER = "fraud_readonly"
-READONLY_PASSWORD = os.getenv("READONLY_DB_PASSWORD", "readonly_change_me")
+_DEFAULT_PW = "readonly_change_me"
+READONLY_PASSWORD = os.getenv("READONLY_DB_PASSWORD", _DEFAULT_PW)
+if READONLY_PASSWORD == _DEFAULT_PW:
+    if os.getenv("APP_ENV", "development").lower() == "production":
+        raise RuntimeError("Set READONLY_DB_PASSWORD before running in production.")
+    print("[security] WARNING: READONLY_DB_PASSWORD is the default. Change it before deploying.")
 HOST = os.getenv("POSTGRES_HOST", "localhost")
 PORT = os.getenv("POSTGRES_PORT", "5432")
 DB = os.getenv("POSTGRES_DB", "upi_fraud")
