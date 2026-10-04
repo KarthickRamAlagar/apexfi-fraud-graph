@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react'
-import { Globe2, Scale, ShieldCheck, Users, Cpu, Gauge } from 'lucide-react'
+import { Globe2, Scale, ShieldCheck, Users, Cpu } from 'lucide-react'
 import { Panel } from '@/components/Panel'
 import { cn } from '@/lib/utils'
 
@@ -15,7 +15,7 @@ const TAGS = {
 
 function Tag({ kind }) {
   const t = TAGS[kind]
-  return <span className={cn('rounded px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wide', t.cls)}>{t.label}</span>
+  return <span className={cn('ml-1 rounded-full px-2 py-0.5 text-[10px] font-medium', t.cls)}>{t.label}</span>
 }
 
 const fmt = (v, d = 0) => (Number.isFinite(v) ? v.toLocaleString(undefined, { maximumFractionDigits: d }) : '—')
@@ -73,7 +73,7 @@ export default function SdgImpact({ sweep, avgAmount, preventionRate, lossGivenM
         <div className="lg:col-span-6">
           <div className="flex items-center justify-between text-xs text-muted-foreground">
             <span>Transactions per day <Tag kind="scenario" /></span>
-            <span className="font-mono text-foreground">{fmt(volume)}</span>
+            <span className="font-medium tabular-nums text-foreground">{fmt(volume)}</span>
           </div>
           <input type="range" min={LOG_MIN} max={LOG_MAX} step={0.02} value={slider} onChange={onSlider} className="w-full mt-2 accent-primary" />
           <div className="flex justify-between text-[10px] text-muted-foreground">
@@ -88,13 +88,13 @@ export default function SdgImpact({ sweep, avgAmount, preventionRate, lossGivenM
           </div>
         </div>
         <NumField className="lg:col-span-2" label="Or type a number" value={volume} min={1000} onChange={(v) => setVolume(Math.max(1000, v))} />
-        <NumField className="lg:col-span-2" label="Fraud rate (%)" hint={`test set: ${testFraudPct.toFixed(2)}%`} value={fraudPct} step={0.01} min={0.01} onChange={(v) => setFraudPct(Math.min(50, Math.max(0.01, v)))} />
+        <NumField className="lg:col-span-2" label="Fraud rate (%)" hint={`Test set: ${testFraudPct.toFixed(2)}%`} value={fraudPct} step={0.01} min={0.01} onChange={(v) => setFraudPct(Math.min(50, Math.max(0.01, v)))} />
         <div className="lg:col-span-2">
           <span className="block text-xs text-muted-foreground">Decision threshold</span>
           <select value={thr} onChange={(e) => setThr(Number(e.target.value))} className="w-full px-3 py-2 mt-1 text-sm border rounded-lg border-border bg-background">
             {sweep.map((x) => <option key={x.threshold} value={x.threshold}>{x.threshold.toFixed(1)}{x.threshold === 0.6 ? ' (recommended)' : ''}</option>)}
           </select>
-          <span className="text-[10px] uppercase tracking-wide text-muted-foreground">recall {(r.recall * 100).toFixed(1)}% · FPR {(r.fpr * 100).toFixed(1)}%</span>
+          <span className="text-[11px] text-muted-foreground">Recall {(r.recall * 100).toFixed(1)}% · false-alarm rate {(r.fpr * 100).toFixed(1)}%</span>
         </div>
       </div>
 
@@ -142,8 +142,7 @@ export default function SdgImpact({ sweep, avgAmount, preventionRate, lossGivenM
 
       <div className="grid grid-cols-2 gap-3 mt-4 sm:grid-cols-4">
         <NumField label="Minutes per manual review" value={reviewMin} min={0} step={0.5} onChange={setReviewMin} />
-        <div className="flex items-end text-[11px] leading-relaxed text-muted-foreground sm:col-span-3">
-          <Gauge size={14} className="mr-2 mb-0.5 shrink-0" />
+        <div className="flex items-end pb-2 text-xs leading-relaxed text-muted-foreground sm:col-span-3">
           Dollar values reuse the assumptions panel above (average value {money(avgAmount)}, {preventionRate}% stopped when flagged, {lossGivenMiss}% lost when missed).
           Wording is deliberately "aligned with the indicator", never "contributes X% to the SDG".
         </div>
@@ -168,7 +167,7 @@ function Card({ n, icon: Icon, title, target, big, bigLabel, rows, note }) {
         {rows.map(([k, v, kind]) => (
           <div key={k} className="flex items-start justify-between gap-2 text-xs">
             <span className="text-muted-foreground">{k} <Tag kind={kind} /></span>
-            <span className="font-mono text-right tabular-nums">{v}</span>
+            <span className="font-medium text-right tabular-nums text-foreground">{v}</span>
           </div>
         ))}
       </div>
@@ -183,8 +182,8 @@ function NumField({ label, hint, value, onChange, min = 0, step = 1, className }
       <span className="block text-xs text-muted-foreground">{label}</span>
       <input type="number" min={min} step={step} value={value}
         onChange={(e) => onChange(Number(e.target.value) || 0)}
-        className="w-full px-3 py-2 mt-1 font-mono text-sm border rounded-lg border-border bg-background focus:outline-none focus:ring-1 focus:ring-primary" />
-      {hint && <span className="text-[10px] uppercase tracking-wide text-muted-foreground">{hint}</span>}
+        className="w-full px-3 py-2 mt-1 text-sm tabular-nums border rounded-lg border-border bg-background focus:outline-none focus:ring-1 focus:ring-primary" />
+      {hint && <span className="text-[11px] text-muted-foreground">{hint}</span>}
     </label>
   )
 }
