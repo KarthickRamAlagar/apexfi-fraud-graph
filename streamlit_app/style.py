@@ -1,5 +1,5 @@
 """Shared visual styling across every Streamlit page — glassmorphism theme
-and the rotating Lion Capital emblem in the sidebar, matching the same
+and the rotating ApexFi logo in the sidebar, matching the same
 image/animation used on the React app's "Ask your data" page.
 """
 import base64
@@ -7,7 +7,7 @@ import os
 
 import streamlit as st
 
-ASSET_PATH = os.path.join(os.path.dirname(__file__), "assets", "ashoka-lion-capital.png")
+ASSET_PATH = os.path.join(os.path.dirname(__file__), "assets", "apexfi-logo.png")
 
 # Matches the React app's DesktopOnlyGate threshold exactly — phones blocked,
 # tablets and up allowed.
@@ -114,7 +114,7 @@ def apply_glassmorphism():
 
 
 def render_sidebar_emblem():
-    """Rotating Lion Capital emblem in the sidebar, same 6s 360° Y-axis
+    """rotating ApexFi logo in the sidebar, same 6s 360° Y-axis
     spin as the React GovEmblem component."""
     if not os.path.exists(ASSET_PATH):
         return

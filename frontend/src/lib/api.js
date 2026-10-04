@@ -45,10 +45,5 @@ temporalScore: (payload) => fetchJson('/api/temporal-validation/score', {
   headers: { 'Content-Type': 'application/json' },
   body: JSON.stringify(payload),
 }),
-temporalResults: () => fetchJson('/api/temporal-validation/results'),
-temporalScore: (payload) => fetchJson('/api/temporal-validation/score', {
-  method: 'POST',
-  headers: { 'Content-Type': 'application/json' },
-  body: JSON.stringify(payload),
-}),
+temporalFullReport: () => fetchJson('/api/temporal-validation/full-report'),
 }

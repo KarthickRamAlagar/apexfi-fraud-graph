@@ -36,7 +36,7 @@ with engine.connect() as conn:
 output = "\n".join(lines)
 print(output)
 
-with open("bronze_summary.txt", "w") as f:
+with open("docs/reports/bronze_summary.txt", "w") as f:
     f.write(output + "\n")
 
-print("\nSaved to bronze_summary.txt")
+print("\nSaved to docs/reports/bronze_summary.txt")

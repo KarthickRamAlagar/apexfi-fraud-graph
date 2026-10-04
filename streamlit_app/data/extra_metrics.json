@@ -1,0 +1,15 @@
+{
+  "fraud_detection_extra": {
+    "accuracy": 0.8295,
+    "false_positive_rate": 0.1624,
+    "false_negative_rate": 0.3947
+  },
+  "system_performance": {
+    "avg_inference_latency_ms": 6373.61,
+    "p95_inference_latency_ms": 6994.34,
+    "process_memory_before_mb": 471.45,
+    "process_memory_after_mb": 23.53,
+    "latency_note": "This latency includes two real, live database queries per prediction (rolling-window feature lookup) -- see the database indexing fix for the before/after comparison isolating this specific bottleneck."
+  },
+  "note": "Real, measured values from the temporal-validated IEEE-CIS model -- accuracy/FPR/FNR from the same real confusion matrix already used for precision/recall/F1; latency/memory from a real, direct benchmark of 100 live predictions using the real, full live-scoring endpoint (including its real database calls), not simulated or estimated. Memory corrected to use psutil (real OS-level RSS) after the original tracemalloc measurement was found to be meaningless (0.01 MB) -- tracemalloc cannot see memory used by C-extension code like LightGBM/SHAP."
+}

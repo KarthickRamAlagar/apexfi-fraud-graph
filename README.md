@@ -170,6 +170,10 @@ results.)
 
 ## Folder layout (current)
 
+Run any script from the repo root as a module, e.g.
+`uv run python -m etl.validation.verify_bronze` or `uv run python -m etl.profiling.bronze_summary`
+(the loose root-level scripts were moved into `etl/` and `eda/`; they need `-m` so `etl.*` imports resolve).
+
 ```
 upi-fraud-gnn/
 ├── data/                     # local data lake (gitignored except .gitkeep)
@@ -181,7 +185,12 @@ upi-fraud-gnn/
 │   ├── extract/               # one fetch script per data source
 │   ├── load/                  # loads extracted data into Bronze
 │   ├── transform/              # Bronze->Silver, Silver->Gold
+│   ├── profiling/               # source inspection + bronze row/column summaries
+│   ├── validation/              # verify_* / compare_* data-quality & ground-truth checks
+│   ├── maintenance/             # one-off DB housekeeping (rename_table.py)
 │   └── db/                      # connection.py, schema.sql
+├── eda/                          # exploratory analysis scripts + notebooks
+├── docs/                          # progress report, leakage/reproducibility audit, reports/
 ├── streamlit_app/                 # standalone deep-EDA app (Streamlit Community Cloud)
 │   ├── pages/                       # Full Profiling, Raw Data Browser, Model Evaluation,
 │   │                                  # Temporal Validation
@@ -212,6 +221,7 @@ upi-fraud-gnn/
 │   ├── inference.py / dgraph_fin_inference.py       # real-time prediction for existing records
 │   ├── new_transaction_*.py                          # genuinely new/unseen transaction scoring
 │   ├── validate_*.py                                  # ground-truth validation scripts (see note below)
+│   ├── diagnostics/                                    # debug_* / check_* one-off investigation scripts
 │   └── checkpoints/                                    # trained model files (gitignored — see
 │                                                          # Model Weights below)
 └── (no separate tests/ folder — see note below)
@@ -322,3 +332,5 @@ assumed risk. **See the Temporal Validation section for two further,
 independent confirmations of this same real pattern.**
 
 ---
+uv run streamlit run Home.py
+uv run uvicorn backend.main:app --reload

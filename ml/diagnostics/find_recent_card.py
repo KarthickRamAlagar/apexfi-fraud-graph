@@ -28,4 +28,4 @@ with engine.connect() as conn:
 
     print("\nReal card1 values with genuine activity in the dataset's true final hour:")
     for r in rows:
-        print(f"  card1={r.card1}: {r.cnt} real transactions, ₹{r.total:.2f} total")
+        print(f"  card1={r.card1}: {r.cnt} real transactions, ${r.total:.2f} total")

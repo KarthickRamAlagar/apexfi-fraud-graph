@@ -163,7 +163,7 @@ export default function ScoreNewTransaction() {
           <div className="min-h-[220px] space-y-5">
             {currentStep === 0 && (
               <FieldGroup title="Transaction">
-                <Field label="Amount (₹)" required>
+                <Field label="Amount ($)" required>
                   <NumberInput
                     step={0.01}
                     value={form.transactionamt}
@@ -309,7 +309,7 @@ export default function ScoreNewTransaction() {
               </p>
               <div className="flex justify-center overflow-hidden">
                 <TransactionGraph
-                  center={{ id: 'TX-NEW', amount: form.transactionamt ? `₹${form.transactionamt}` : '—' }}
+                  center={{ id: 'TX-NEW', amount: form.transactionamt ? `$${form.transactionamt}` : '—' }}
                   neighbors={result.graphContext.matchedNeighbors ?? []}
                   onSelectNode={() => {}}
                 />

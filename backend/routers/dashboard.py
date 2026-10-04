@@ -65,7 +65,7 @@ def get_recent_transactions():
 
         transactions.append({
             "id": f"TX-{r.transactionid}",
-            "amount": f"₹{r.transactionamt:,.2f}",
+            "amount": f"${r.transactionamt:,.2f}",
             "device": f"DeviceInfo: {r.deviceinfo}" if r.deviceinfo else "unknown",
             "card": f"card1: {int(r.card1)}" if r.card1 is not None else "unknown",
             "historicalLabel": "Fraud" if r.is_fraud else "Normal",

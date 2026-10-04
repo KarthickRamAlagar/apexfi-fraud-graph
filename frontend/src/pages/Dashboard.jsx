@@ -4,13 +4,14 @@
 // import {
 //   AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
 // } from 'recharts'
-// import { LayoutGrid, Radar, Share2, Cpu, TrendingUp, GitCompareArrows } from 'lucide-react'
+// import { LayoutGrid, Radar, Share2, Cpu, TrendingUp, GitCompareArrows, Link2 } from 'lucide-react'
 // import StatPill from '@/components/StatPill'
 // import { Panel } from '@/components/Panel'
 // import PendingBanner from '@/components/PendingBanner'
 // import { DashboardSkeleton } from '@/components/PageSkeletons'
 // import { api } from '@/lib/api'
 // import { cn } from '@/lib/utils'
+// import LoadingOverlay from '@/components/LoadingOverlay'
 
 // const fadeUp = {
 //   hidden: { opacity: 0, y: 12 },
@@ -24,6 +25,12 @@
 // const toneMap = { normal: 'low', background: 'medium', fraud: 'high' }
 // const toneClasses = { low: 'text-risk-low', medium: 'text-risk-medium', high: 'text-risk-high' }
 // const toneBg = { low: 'bg-risk-low', medium: 'bg-risk-medium', high: 'bg-risk-high' }
+
+// // Ethereum stats now come live from the backend (summary.ethereum),
+// // computed for real from the actual CSV + saved training metrics — see
+// // backend/services/precompute_summaries.py::compute_ethereum_summary().
+// // Handled as possibly-null below, since the summary returns null if the
+// // raw CSV isn't present on this machine yet.
 
 // export default function Dashboard() {
 //   const { data: summary, error: summaryError } = useQuery({
@@ -53,12 +60,13 @@
 //     )
 //   }
 
-//   if (!summary || !analytics || !recentTx) {
-//     return <DashboardSkeleton />
-//   }
+// if (!summary || !analytics || !recentTx) {
+//     return <LoadingOverlay><DashboardSkeleton /></LoadingOverlay>
+// }
 
-//   const totalEntities = summary.ieee_cis.total_transactions + summary.dgraph_fin.total_nodes
-//   const totalFlagged = summary.ieee_cis.fraud_count + summary.dgraph_fin.fraud_count
+//   const eth = summary.ethereum // may be null if the raw CSV isn't present locally yet
+//   const totalEntities = summary.ieee_cis.total_transactions + summary.dgraph_fin.total_nodes + (eth?.total_accounts ?? 0)
+//   const totalFlagged = summary.ieee_cis.fraud_count + summary.dgraph_fin.fraud_count + (eth?.fraud_count ?? 0)
 //   const totalEdges = summary.ieee_cis.graph_edges + summary.dgraph_fin.total_edges
 
 //   const dgraphTotal = summary.dgraph_fin.total_nodes
@@ -68,17 +76,24 @@
 //     { label: 'Fraud', value: (summary.dgraph_fin.fraud_count / dgraphTotal) * 100, tone: 'high' },
 //   ]
 
+//   const ethDistribution = eth
+//     ? [
+//         { value: (eth.normal_count / eth.total_accounts) * 100 },
+//         { value: (eth.fraud_count / eth.total_accounts) * 100 },
+//       ]
+//     : []
+
 //   return (
 //     <div className="container py-8 space-y-6">
 //       <motion.div variants={fadeUp} initial="hidden" animate="show">
-//         <p className="text-sm text-muted-foreground">Monitored across both source datasets</p>
+//         <p className="text-sm text-muted-foreground">Monitored across three source datasets</p>
 //         <h1 className="text-3xl font-semibold font-display tabular-nums">
 //           {totalEntities.toLocaleString()}{' '}
 //           <span className="text-base font-normal text-muted-foreground">total entities</span>
 //         </h1>
 //       </motion.div>
 
-//       <motion.div className="grid grid-cols-1 gap-4 md:grid-cols-2" variants={fadeUp} initial="hidden" animate="show" custom={1}>
+//       <motion.div className="grid grid-cols-1 gap-4 md:grid-cols-3" variants={fadeUp} initial="hidden" animate="show" custom={1}>
 //         <StatPill
 //           label="IEEE-CIS"
 //           sublabel="Card transactions"
@@ -93,12 +108,21 @@
 //           trend={riskDistribution.map((d) => d.value)}
 //           tone="high"
 //         />
+//         {eth && (
+//           <StatPill
+//             label="Ethereum (Experiment)"
+//             sublabel="Blockchain accounts"
+//             value={eth.total_accounts.toLocaleString()}
+//             trend={ethDistribution.map((d) => d.value)}
+//             tone="high"
+//           />
+//         )}
 //       </motion.div>
 
 //       <motion.div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4" variants={fadeUp} initial="hidden" animate="show" custom={2}>
 //         <Panel title="Overview" icon={LayoutGrid}>
 //           <div className="text-2xl font-semibold tabular-nums">{totalFlagged.toLocaleString()}</div>
-//           <div className="text-xs text-muted-foreground">Flagged across both datasets</div>
+//           <div className="text-xs text-muted-foreground">Flagged across all three datasets</div>
 //         </Panel>
 //         <Panel title="Risk Signals" icon={Radar}>
 //           <div className="text-2xl font-semibold tabular-nums text-risk-high">2</div>
@@ -124,9 +148,11 @@
 //       </motion.div>
 
 //       {summary.model_status === 'trained_and_validated' && summary.model_validation && (
-//         <motion.div className="grid grid-cols-1 gap-4 md:grid-cols-2" variants={fadeUp} initial="hidden" animate="show" custom={2.5}>
-//           {Object.entries(summary.model_validation).map(([key, v]) => (
-//             <Panel key={key} title={key === 'ieee_cis' ? 'IEEE-CIS Model (validated)' : 'DGraph-Fin Model (validated)'} icon={Cpu}>
+//         <motion.div className="grid grid-cols-1 gap-4 md:grid-cols-3" variants={fadeUp} initial="hidden" animate="show" custom={2.5}>
+//           {Object.entries(summary.model_validation)
+//             .filter(([key]) => key !== 'ethereum')
+//             .map(([key, v]) => (
+//             <Panel key={key} title={key === 'ieee_cis' ? 'IEEE-CIS Model (random split)' : 'DGraph-Fin Model (random split)'} icon={Cpu}>
 //               <div className="flex gap-6">
 //                 <div>
 //                   <div className="font-mono text-xl font-semibold tabular-nums">
@@ -139,9 +165,31 @@
 //                   <div className="text-xs text-muted-foreground">ROC-AUC</div>
 //                 </div>
 //               </div>
-//               <p className="mt-2 text-xs text-muted-foreground">Real, {v.seeds_validated}-seed cross-validated — stacked LightGBM + GNN.</p>
+//               <p className="mt-2 text-xs text-muted-foreground">Real, {v.seeds_validated}-seed validated — stacked LightGBM + GNN, <strong>random split</strong>. Chronological (time-aware) results are on the Temporal Validation page.</p>
 //             </Panel>
 //           ))}
+//           {summary.model_validation.ethereum?.trained && (
+//             <Panel title="Ethereum Model (validated)" icon={Link2}>
+//               <div className="flex gap-6">
+//                 <div>
+//                   <div className="font-mono text-xl font-semibold tabular-nums">
+//                     {(summary.model_validation.ethereum.f1_mean * 100).toFixed(1)}%
+//                   </div>
+//                   <div className="text-xs text-muted-foreground">F1 score</div>
+//                 </div>
+//                 <div>
+//                   <div className="font-mono text-xl font-semibold tabular-nums">
+//                     {(summary.model_validation.ethereum.roc_auc_mean * 100).toFixed(1)}%
+//                   </div>
+//                   <div className="text-xs text-muted-foreground">ROC-AUC</div>
+//                 </div>
+//               </div>
+//               <p className="mt-2 text-xs text-muted-foreground">
+//                 Real held-out test result — single run (not multi-seed validated), LightGBM + SHAP,
+//                 third independent experiment.
+//               </p>
+//             </Panel>
+//           )}
 //         </motion.div>
 //       )}
 
@@ -277,7 +325,9 @@
 //         <div className="p-4 text-sm leading-relaxed border border-dashed rounded-lg border-muted-foreground/30 bg-muted/20 text-muted-foreground">
 //           <p>
 //             <strong className="text-foreground">Models trained and validated.</strong> Every figure on
-//             this page is real, pulled live from the Gold layer.
+//             this page is real, pulled live from the Gold layer (Ethereum stats are read live from
+//             its real training data and results, though it's a single-run experiment, not multi-seed
+//             validated like the other two).
 //           </p>
 //           <div className="flex flex-wrap gap-2 mt-3">
 //             <Link
@@ -298,6 +348,12 @@
 //             >
 //               Score an unlabeled DGraph-Fin account →
 //             </Link>
+//             <Link
+//               to="/ethereum-fraud"
+//               className="rounded-md border border-border bg-secondary/40 px-3 py-1.5 text-xs text-foreground transition-colors hover:bg-secondary"
+//             >
+//               Score an Ethereum account →
+//             </Link>
 //           </div>
 //         </div>
 //       ) : (
@@ -310,7 +366,10 @@
 //   )
 // }
 
-import { useQuery } from '@tanstack/react-query'
+
+
+import { useEffect } from 'react'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { Link } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import {
@@ -323,6 +382,7 @@ import PendingBanner from '@/components/PendingBanner'
 import { DashboardSkeleton } from '@/components/PageSkeletons'
 import { api } from '@/lib/api'
 import { cn } from '@/lib/utils'
+import LoadingOverlay from '@/components/LoadingOverlay'
 
 const fadeUp = {
   hidden: { opacity: 0, y: 12 },
@@ -344,6 +404,8 @@ const toneBg = { low: 'bg-risk-low', medium: 'bg-risk-medium', high: 'bg-risk-hi
 // raw CSV isn't present on this machine yet.
 
 export default function Dashboard() {
+  const queryClient = useQueryClient()
+
   const { data: summary, error: summaryError } = useQuery({
     queryKey: ['dashboard-summary'],
     queryFn: api.dashboardSummary,
@@ -357,6 +419,21 @@ export default function Dashboard() {
     queryFn: api.recentTransactions,
   })
   const recentTx = recentTxData?.transactions
+
+  // Real, silent background prefetch -- fires once, while the user is
+  // on Dashboard, so other pages' data is already cached by the time
+  // they click to navigate there. Uses the EXACT same queryKey +
+  // queryFn each target page's own useQuery call uses, so TanStack
+  // Query treats it as the same, already-fresh entry (respecting the
+  // existing 1-hour staleTime) rather than re-fetching when that page
+  // actually mounts. Runs in parallel with Dashboard's own 3 queries
+  // above -- doesn't block or wait for them.
+  useEffect(() => {
+    queryClient.prefetchQuery({ queryKey: ['eda', 'ieee_cis'], queryFn: () => api.eda('ieee_cis') })
+    queryClient.prefetchQuery({ queryKey: ['eda', 'dgraph_fin'], queryFn: () => api.eda('dgraph_fin') })
+    queryClient.prefetchQuery({ queryKey: ['datasets'], queryFn: api.datasets })
+    queryClient.prefetchQuery({ queryKey: ['investigate-samples'], queryFn: api.investigateSamples })
+  }, [queryClient])
 
   const error = summaryError || analyticsError || txError
 
@@ -372,7 +449,7 @@ export default function Dashboard() {
   }
 
   if (!summary || !analytics || !recentTx) {
-    return <DashboardSkeleton />
+    return <LoadingOverlay><DashboardSkeleton /></LoadingOverlay>
   }
 
   const eth = summary.ethereum // may be null if the raw CSV isn't present locally yet
@@ -436,8 +513,14 @@ export default function Dashboard() {
           <div className="text-xs text-muted-foreground">Flagged across all three datasets</div>
         </Panel>
         <Panel title="Risk Signals" icon={Radar}>
-          <div className="text-2xl font-semibold tabular-nums text-risk-high">2</div>
-          <div className="text-xs text-muted-foreground">Evidence-backed edge types</div>
+          <div className="text-2xl font-semibold tabular-nums text-risk-high">
+            {analytics?.edgeLift ? analytics.edgeLift.filter((e) => e.lift >= 1.5).length : '—'}
+          </div>
+          <div className="text-xs text-muted-foreground">
+            {analytics?.edgeLift
+              ? `of ${analytics.edgeLift.length} edge types are strong fraud signals (lift ≥ 1.5×)`
+              : 'Evidence-backed edge types'}
+          </div>
         </Panel>
         <Panel title="Graph Stats" icon={Share2}>
           <div className="text-2xl font-semibold tabular-nums">{totalEdges.toLocaleString()}</div>
@@ -463,7 +546,7 @@ export default function Dashboard() {
           {Object.entries(summary.model_validation)
             .filter(([key]) => key !== 'ethereum')
             .map(([key, v]) => (
-            <Panel key={key} title={key === 'ieee_cis' ? 'IEEE-CIS Model (validated)' : 'DGraph-Fin Model (validated)'} icon={Cpu}>
+            <Panel key={key} title={key === 'ieee_cis' ? 'IEEE-CIS Model (random split)' : 'DGraph-Fin Model (random split)'} icon={Cpu}>
               <div className="flex gap-6">
                 <div>
                   <div className="font-mono text-xl font-semibold tabular-nums">
@@ -476,7 +559,7 @@ export default function Dashboard() {
                   <div className="text-xs text-muted-foreground">ROC-AUC</div>
                 </div>
               </div>
-              <p className="mt-2 text-xs text-muted-foreground">Real, {v.seeds_validated}-seed cross-validated — stacked LightGBM + GNN.</p>
+              <p className="mt-2 text-xs text-muted-foreground">Real, {v.seeds_validated}-seed validated — stacked LightGBM + GNN, <strong>random split</strong>. Chronological (time-aware) results are on the Temporal Validation page.</p>
             </Panel>
           ))}
           {summary.model_validation.ethereum?.trained && (

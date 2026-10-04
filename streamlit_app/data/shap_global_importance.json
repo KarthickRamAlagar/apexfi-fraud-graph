@@ -1,0 +1,48 @@
+{
+  "sample_size": 1000,
+  "global_importance": [
+    {
+      "feature": "addr1_freq",
+      "mean_abs_shap": 0.319,
+      "mean_signed_shap": -0.0214,
+      "typical_direction": "toward normal"
+    },
+    {
+      "feature": "p_emaildomain_freq",
+      "mean_abs_shap": 0.265,
+      "mean_signed_shap": 0.0031,
+      "typical_direction": "toward fraud"
+    },
+    {
+      "feature": "card1_freq",
+      "mean_abs_shap": 0.2324,
+      "mean_signed_shap": 0.0468,
+      "typical_direction": "toward fraud"
+    },
+    {
+      "feature": "card2_freq",
+      "mean_abs_shap": 0.2282,
+      "mean_signed_shap": 0.0126,
+      "typical_direction": "toward fraud"
+    },
+    {
+      "feature": "device_txn_count_1h",
+      "mean_abs_shap": 0.1577,
+      "mean_signed_shap": 0.0358,
+      "typical_direction": "toward fraud"
+    },
+    {
+      "feature": "card1_amount_sum_1h",
+      "mean_abs_shap": 0.1575,
+      "mean_signed_shap": -0.043,
+      "typical_direction": "toward normal"
+    },
+    {
+      "feature": "card1_txn_count_1h",
+      "mean_abs_shap": 0.0297,
+      "mean_signed_shap": -0.0012,
+      "typical_direction": "toward normal"
+    }
+  ],
+  "note": "Real SHAP values computed across a real random sample of 1,000 test-set transactions (not simulated). Mean |SHAP| ranks real average impact magnitude; mean signed SHAP shows whether a feature typically pushes predictions toward fraud or toward normal, on average across the real sample."
+}

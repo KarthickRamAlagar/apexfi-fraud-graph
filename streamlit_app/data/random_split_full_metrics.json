@@ -1,0 +1,19 @@
+{
+  "random_split_full_metrics": {
+    "accuracy": 0.8208,
+    "precision": 0.1289,
+    "recall": 0.716,
+    "f1": 0.2185,
+    "roc_auc": 0.8463,
+    "pr_auc": 0.2273,
+    "false_positive_rate": 0.1754,
+    "false_negative_rate": 0.284
+  },
+  "system_performance": {
+    "avg_inference_latency_ms": 7.24,
+    "p95_inference_latency_ms": 10.7,
+    "process_memory_before_mb": 614.84,
+    "process_memory_after_mb": 615.25
+  },
+  "note": "Real, full metric set for the RANDOM split model -- no live database calls in this specific latency benchmark (unlike the temporal model's live scoring endpoint), so this isolates pure model+SHAP compute time for a fair comparison of the two models' own real inference cost."
+}

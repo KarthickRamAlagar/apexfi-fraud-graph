@@ -32,7 +32,7 @@ SCHEMA_DESCRIPTION = """
 You have READ-ONLY access to a PostgreSQL database (schema "gold") for a UPI/IMPS fraud-detection project. Tables:
 
 gold.ieee_cis_features (590,540 rows) — one row per card transaction.
-  Key columns: transactionid (int, PK), is_fraud (boolean, target), transactionamt (numeric, INR),
+  Key columns: transactionid (int, PK), is_fraud (boolean, target), transactionamt (numeric, USD),
   productcd (text), card1 (int), deviceinfo (text), transaction_date (date),
   day_of_week (int, 0=Sun..6=Sat), hour_of_day (int, 0-23), fiscal_year (text, e.g. '2017-18'),
   bank_rate (numeric, RBI rate for that fiscal year, may be NULL for FY2018-19).

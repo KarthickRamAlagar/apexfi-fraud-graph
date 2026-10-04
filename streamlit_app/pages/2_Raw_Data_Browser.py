@@ -42,7 +42,7 @@ with st.expander("Filters", expanded=True):
             amt_range = None
             if "transactionamt" in df.columns:
                 min_amt, max_amt = float(df["transactionamt"].min()), float(df["transactionamt"].max())
-                amt_range = st.slider("Transaction amount (INR)", min_amt, max_amt, (min_amt, max_amt))
+                amt_range = st.slider("Transaction amount (USD)", min_amt, max_amt, (min_amt, max_amt))
 
         if fraud_only == "Fraud only":
             filtered = filtered[filtered["is_fraud"]]

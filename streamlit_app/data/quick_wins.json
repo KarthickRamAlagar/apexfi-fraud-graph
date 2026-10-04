@@ -1,0 +1,45 @@
+{
+  "finalized_threshold": {
+    "value": 0.6,
+    "justification": "Threshold 0.6 chosen as the recommended operating point over the naive default (0.5) and the mathematically-best-F1 threshold (0.7). At 0.6: F1=0.2343 (better than default's 0.1970), Precision=0.1525 (better than default's 0.1176), and FPR=0.1003 (better than default's 0.1624) -- a real improvement on every one of these simultaneously. Threshold 0.7, despite a marginally higher F1 (0.2601), was rejected as the primary recommendation because its Recall drops to 39.65% (FNR 60.35%) -- missing over 60% of real fraud is a worse trade-off for a fraud-detection system than 0.6's 50.47% recall (FNR 49.53%). This is a deliberate business-policy choice, not simply the highest F1 value."
+  },
+  "feature_importance_gain": [
+    {
+      "feature": "addr1_freq",
+      "importance": 1546112.74
+    },
+    {
+      "feature": "card1_freq",
+      "importance": 950367.5
+    },
+    {
+      "feature": "card2_freq",
+      "importance": 703475.33
+    },
+    {
+      "feature": "p_emaildomain_freq",
+      "importance": 474548.9
+    },
+    {
+      "feature": "device_txn_count_1h",
+      "importance": 404639.8
+    },
+    {
+      "feature": "card1_amount_sum_1h",
+      "importance": 181230.26
+    },
+    {
+      "feature": "card1_txn_count_1h",
+      "importance": 43618.55
+    }
+  ],
+  "memory_recheck_mb": {
+    "before": 229.16,
+    "after": 229.2,
+    "delta": 0.03
+  },
+  "latency_percentiles_ms": {
+    "p95": 235.4,
+    "p99": 298.92
+  }
+}

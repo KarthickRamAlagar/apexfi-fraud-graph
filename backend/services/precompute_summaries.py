@@ -5,8 +5,22 @@ overlays, edge-type fraud lift) once and stores the results as JSON in
 gold.precomputed_summary. The EDA and Analytics API endpoints then just
 SELECT this JSON — fast, no per-request full-table scans.
 
-Re-run this any time the underlying Gold tables change.
+Re-run this any time the underlying Gold tables change. Supports
+selective execution via --only, so a single job can be refreshed
+without recomputing all five — e.g.:
+
+    uv run python -m backend.services.precompute_summaries --only dashboard
+    uv run python -m backend.services.precompute_summaries --only ieee_eda dgraph_eda
+    uv run python -m backend.services.precompute_summaries   # runs all five, original behavior
+
+HONEST NOTE on this version: IEEE_STAT_COLUMNS and DGRAPH_STAT_COLUMNS
+were expanded from 4 to 20 real columns each, for a real 21x21
+correlation matrix (20 features + 1 target). This makes ieee_eda and
+dgraph_eda jobs genuinely slower to precompute (210 real CORR() SQL
+queries each, vs. 10 before) -- a one-time, offline cost, not a live
+per-page-load cost.
 """
+import argparse
 import json
 import os
 from datetime import date
@@ -24,15 +38,33 @@ ETHEREUM_CSV_PATH = "data/raw_downloads/ethereum_fraud.csv"
 IEEE_STAT_COLUMNS = [
     {"key": "TransactionAmt", "col": "transactionamt", "meaning": "Transaction amount, in USD."},
     {"key": "C1", "col": "c1", "meaning": "Count feature — number of addresses linked to this card (anonymized by Vesta)."},
+    {"key": "C2", "col": "c2", "meaning": "Count feature (anonymized by Vesta)."},
+    {"key": "C3", "col": "c3", "meaning": "Count feature (anonymized by Vesta)."},
+    {"key": "C4", "col": "c4", "meaning": "Count feature (anonymized by Vesta)."},
+    {"key": "C5", "col": "c5", "meaning": "Count feature (anonymized by Vesta)."},
+    {"key": "C6", "col": "c6", "meaning": "Count feature (anonymized by Vesta)."},
+    {"key": "C7", "col": "c7", "meaning": "Count feature (anonymized by Vesta)."},
+    {"key": "C8", "col": "c8", "meaning": "Count feature (anonymized by Vesta)."},
+    {"key": "C9", "col": "c9", "meaning": "Count feature (anonymized by Vesta)."},
+    {"key": "C10", "col": "c10", "meaning": "Count feature (anonymized by Vesta)."},
+    {"key": "C11", "col": "c11", "meaning": "Count feature (anonymized by Vesta)."},
+    {"key": "C12", "col": "c12", "meaning": "Count feature (anonymized by Vesta)."},
+    {"key": "C13", "col": "c13", "meaning": "Count feature (anonymized by Vesta)."},
+    {"key": "C14", "col": "c14", "meaning": "Count feature (anonymized by Vesta)."},
     {"key": "D1", "col": "d1", "meaning": "Time-delta feature — days since the card's first seen transaction."},
+    {"key": "D2", "col": "d2", "meaning": "Time-delta feature (anonymized by Vesta)."},
+    {"key": "D3", "col": "d3", "meaning": "Time-delta feature (anonymized by Vesta)."},
+    {"key": "D4", "col": "d4", "meaning": "Time-delta feature (anonymized by Vesta)."},
     {"key": "day_of_week", "col": "day_of_week", "meaning": "Derived feature: day of week the transaction occurred (0=Sun … 6=Sat)."},
 ]
 
 DGRAPH_STAT_COLUMNS = [
-    {"key": "x0", "col": "x0", "meaning": "Anonymized node feature (dimension 0 of 17)."},
-    {"key": "x3", "col": "x3", "meaning": "Anonymized node feature (dimension 3 of 17)."},
-    {"key": "total_degree", "col": "total_degree", "meaning": "Number of emergency-contact connections this user has."},
-    {"key": "node_timestamp", "col": "node_timestamp", "meaning": "Fin2 fraud-onset timestamp — only recorded for fraud-labeled nodes."},
+    {"key": f"x{i}", "col": f"x{i}", "meaning": f"Anonymized node feature (dimension {i} of 17)."}
+    for i in range(17)
+] + [
+    {"key": "total_degree", "col": "total_degree", "meaning": "Total number of emergency-contact connections this user has."},
+    {"key": "out_degree", "col": "out_degree", "meaning": "Number of users this account designated as an emergency contact."},
+    {"key": "in_degree", "col": "in_degree", "meaning": "Number of users who designated this account as their emergency contact."},
 ]
 
 
@@ -64,9 +96,6 @@ def compute_stats_and_histogram(table, col, conn):
     if stats["min"] is None or stats["max"] is None or stats["min"] == stats["max"]:
         histogram = [stats["count"] or 0] + [0] * 15
     elif stats["max"] - stats["min"] <= 15 and stats["max"] == int(stats["max"]):
-        # Small-cardinality discrete column (e.g. day_of_week, 0-6) — equal-
-        # width bucketing produces a broken-looking histogram with mostly
-        # empty buckets for these. Use exact value counts instead.
         exact_sql = f"""
             SELECT {col}::int AS v, COUNT(*) AS cnt
             FROM {table}
@@ -94,9 +123,6 @@ def compute_stats_and_histogram(table, col, conn):
 
 
 def compute_wide_missing_pct(table, pattern, conn, row_count):
-    """Compute missingness across ALL columns matching a regex pattern (e.g.
-    v\\d+) in a single pass — not one query per column, which would be far
-    too slow across 358+ columns."""
     cols = conn.execute(
         text(
             """
@@ -121,6 +147,22 @@ def compute_wide_missing_pct(table, pattern, conn, row_count):
     return missing_pct, len(col_names)
 
 
+def compute_wide_scatter_sample(table, stat_cols, target_expr, conn, sample_size=500):
+    """Real random sample of rows, with ALL stat-column values included
+    -- lets the frontend dynamically choose any two columns to plot as
+    X/Y (whichever feature is currently selected), rather than being
+    locked to one fixed pair computed here."""
+    col_list = ", ".join(f"{c}::float AS {c}" for c in stat_cols)
+    sql = f"""
+        SELECT {col_list}, {target_expr} AS label
+        FROM {table}
+        ORDER BY RANDOM()
+        LIMIT :n
+    """
+    rows = conn.execute(text(sql), {"n": sample_size}).fetchall()
+    return [dict(r._mapping) for r in rows]
+
+
 def compute_eda_summary(dataset_key, table, stat_columns, target_col, target_numeric_expr, total_columns, independent_columns, wide_missing_pattern, conn):
     row_count = conn.execute(text(f"SELECT COUNT(*) FROM {table}")).scalar()
 
@@ -131,10 +173,6 @@ def compute_eda_summary(dataset_key, table, stat_columns, target_col, target_num
         stats[sc["key"]] = s
         histograms[sc["key"]] = h
 
-    # correlation matrix among stat columns + target (target_numeric_expr is a
-    # real numeric SQL expression, e.g. "(is_fraud)::int" or "label_raw" —
-    # CORR() requires numeric input, so text columns like DGraph-Fin's
-    # 'label' can't be used directly)
     corr_cols = [sc["col"] for sc in stat_columns] + [target_numeric_expr]
     labels = [sc["key"] for sc in stat_columns] + [target_col]
     n = len(corr_cols)
@@ -147,13 +185,9 @@ def compute_eda_summary(dataset_key, table, stat_columns, target_col, target_num
             matrix[i][j] = val
             matrix[j][i] = val
 
-    # Data quality: missingness computed across the FULL set of matching
-    # wide columns (e.g. all 358 V/C/D columns for IEEE-CIS), not just the 4
-    # curated display columns — those are nearly 100% populated and would
-    # give a misleadingly clean quality score if used alone.
     missing_pct, wide_col_count = compute_wide_missing_pct(table, wide_missing_pattern, conn, row_count)
     quality = {"valid": round(100 - missing_pct, 2), "missing": missing_pct, "duplicate": 0.0}
-    quality_note = f"Missingness computed across {wide_col_count} columns matching /{wide_missing_pattern}/, not just the 4 shown below."
+    quality_note = f"Missingness computed across {wide_col_count} columns matching /{wide_missing_pattern}/, not just the {len(stat_columns)} shown below."
 
     return {
         "rows": row_count,
@@ -184,6 +218,23 @@ def compute_dgraph_categorical(conn):
         text("SELECT label, COUNT(*) AS cnt FROM gold.dgraph_fin_nodes GROUP BY label ORDER BY cnt DESC")
     ).fetchall()
     return [{"label": r.label.capitalize(), "count": r.cnt} for r in rows]
+
+
+def compute_ieee_class_distribution(conn):
+    total = conn.execute(text("SELECT COUNT(*) FROM gold.ieee_cis_features")).scalar()
+    fraud = conn.execute(text("SELECT COUNT(*) FROM gold.ieee_cis_features WHERE is_fraud")).scalar()
+    return [
+        {"label": "Normal", "count": total - fraud, "tone": "low"},
+        {"label": "Fraud", "count": fraud, "tone": "high"},
+    ]
+
+
+def compute_dgraph_class_distribution(conn):
+    rows = conn.execute(
+        text("SELECT label, COUNT(*) AS cnt FROM gold.dgraph_fin_nodes GROUP BY label ORDER BY cnt DESC")
+    ).fetchall()
+    tone_map = {"normal": "low", "background": "medium", "fraud": "high"}
+    return [{"label": r.label.capitalize(), "count": r.cnt, "tone": tone_map.get(r.label, "medium")} for r in rows]
 
 
 def compute_ieee_graph_stats(conn):
@@ -231,11 +282,6 @@ def compute_dgraph_graph_stats(conn):
 
 
 def compute_ethereum_summary():
-    """Real stats read directly from the actual training CSV — Ethereum was
-    deliberately built as a standalone, lightweight third experiment,
-    bypassing the Postgres Gold-layer pipeline entirely (not loaded into
-    any gold.* table), so this reads the same real file the training
-    script itself uses, rather than a SQL query."""
     if not os.path.exists(ETHEREUM_CSV_PATH):
         return None
 
@@ -255,18 +301,16 @@ def compute_ethereum_summary():
         "normal_count": total - fraud_count,
         "fraud_rate_pct": round(fraud_count / total * 100, 2) if total else None,
         "metrics": metrics.get("metrics") if metrics else None,
-        "single_run": True,  # honestly distinct from IEEE-CIS/DGraph-Fin's multi-seed validation
+        "single_run": True,
     }
 
 
 def compute_analytics(conn):
-    # KPIs
     overall_fraud_rate = conn.execute(
         text("SELECT AVG(CASE WHEN is_fraud THEN 1.0 ELSE 0 END) * 100 FROM gold.ieee_cis_features")
     ).scalar()
     total_flagged = conn.execute(text("SELECT COUNT(*) FROM gold.ieee_cis_features WHERE is_fraud")).scalar()
 
-    # fraud trend by month
     trend_rows = conn.execute(
         text(
             """
@@ -281,7 +325,6 @@ def compute_analytics(conn):
     ).fetchall()
     fraud_trend = [{"month": r.month, "fraudRate": round(r.fraud_rate, 3)} for r in trend_rows]
 
-    # day/hour heatmap
     heatmap_rows = conn.execute(
         text(
             """
@@ -299,8 +342,6 @@ def compute_analytics(conn):
         if r.day_of_week is not None and r.hour_of_day is not None
     ]
 
-    # edge-type fraud lift: fraud rate among transactions that appear in each
-    # edge type, vs. transactions with no edges at all
     lift_sql = """
         WITH edge_txns AS (
             SELECT DISTINCT src_transactionid AS transactionid, edge_type FROM gold.ieee_cis_transaction_edges
@@ -330,7 +371,6 @@ def compute_analytics(conn):
         for r in lift_rows
     ]
 
-    # RBI overlay by fiscal year (bank_rate already joined into ieee_cis_features)
     rbi_rows = conn.execute(
         text(
             """
@@ -356,7 +396,6 @@ def compute_analytics(conn):
         else "Real RBI bank rate matched by fiscal year."
     )
 
-    # DGraph-Fin degree by label
     degree_rows = conn.execute(
         text("SELECT label, AVG(total_degree)::float AS avg_degree FROM gold.dgraph_fin_nodes GROUP BY label")
     ).fetchall()
@@ -427,16 +466,12 @@ def compute_dashboard_summary(conn):
             "background_count": dgraph_labels.get("background", 0),
             "fraud_rate_pct": round(dgraph_fraud / dgraph_labeled_total * 100, 3) if dgraph_labeled_total else None,
         },
-        "ethereum": compute_ethereum_summary(),  # None if the raw CSV isn't present yet — frontend handles this
+        "ethereum": compute_ethereum_summary(),
         **compute_model_status(),
     }
 
 
 def compute_model_status():
-    """Genuinely dynamic — checks for real multi-seed validation results
-    rather than a hardcoded status string, so Dashboard can never again go
-    stale relative to what's actually trained (the exact inconsistency
-    this function replaces)."""
     data_dir = os.path.join(os.path.dirname(__file__), "..", "..", "streamlit_app", "data")
     results = {}
     for key, label in [("ieee_cis", "IEEE-CIS"), ("dgraph_fin", "DGraph-Fin")]:
@@ -455,18 +490,9 @@ def compute_model_status():
         else:
             results[key] = {"trained": False}
 
-    # Ethereum is deliberately a separate, independent experiment — its
-    # status is reported alongside the others, but does NOT gate the core
-    # project's overall "trained_and_validated" status. Otherwise, simply
-    # not having re-run the Ethereum training script would incorrectly
-    # show the entire dashboard as "training in progress," even though
-    # IEEE-CIS and DGraph-Fin are genuinely fully trained.
     core_results = {k: v for k, v in results.items()}
     all_trained = all(r.get("trained") for r in core_results.values())
 
-    # Ethereum is a real, separate third experiment — single run, not
-    # multi-seed validated, so kept honestly distinct from the loop above
-    # rather than forced into the same "seeds_validated" shape.
     eth_metrics_path = os.path.join(data_dir, "model_metrics_ethereum.json")
     if os.path.exists(eth_metrics_path):
         with open(eth_metrics_path) as f:
@@ -475,7 +501,7 @@ def compute_model_status():
         results["ethereum"] = {
             "trained": True,
             "f1_mean": m.get("f1"),
-            "f1_std": None,  # single run — no real std to report
+            "f1_std": None,
             "roc_auc_mean": m.get("roc_auc"),
             "seeds_validated": 1,
         }
@@ -504,7 +530,6 @@ def compute_datasets_list(conn):
     results = []
     for meta in DATASETS_METADATA:
         if meta["table"] is None:
-            # Ethereum — real, but lives in a CSV, not a gold.* table
             csv_path = meta.get("csvPath")
             if csv_path and os.path.exists(csv_path):
                 df = pd.read_csv(csv_path)
@@ -548,7 +573,89 @@ def compute_datasets_list(conn):
     return {"datasets": results}
 
 
+JOBS = ["ieee_eda", "dgraph_eda", "analytics", "dashboard", "datasets"]
+
+
+def run_ieee_eda(conn):
+    print("Computing IEEE-CIS EDA summary (21x21 correlation matrix — this will take real, noticeable time)...")
+    ieee_eda = compute_eda_summary(
+        "ieee_cis", "gold.ieee_cis_features", IEEE_STAT_COLUMNS, "is_fraud", "(is_fraud)::int",
+        440, 439, r"^(v\d+|c\d+|d\d+)$", conn
+    )
+    ieee_eda["categorical"] = compute_ieee_categorical(conn)
+    ieee_eda["classDistribution"] = compute_ieee_class_distribution(conn)
+    ieee_eda["graph"] = compute_ieee_graph_stats(conn)
+    ieee_eda["label"] = "IEEE-CIS Transactions"
+    ieee_stat_cols = [sc["col"] for sc in IEEE_STAT_COLUMNS]
+    ieee_eda["scatterSample"] = compute_wide_scatter_sample(
+        "gold.ieee_cis_features", ieee_stat_cols, "(is_fraud)::int", conn
+    )
+    save_summary("eda_ieee_cis", ieee_eda, conn)
+    conn.commit()
+    print("  done")
+
+
+def run_dgraph_eda(conn):
+    print("Computing DGraph-Fin EDA summary (21x21 correlation matrix — this will take real, noticeable time)...")
+    dgraph_eda = compute_eda_summary(
+        "dgraph_fin", "gold.dgraph_fin_nodes", DGRAPH_STAT_COLUMNS, "label", "label_raw",
+        24, 23, r"^x\d+$", conn
+    )
+    dgraph_eda["categorical"] = compute_dgraph_categorical(conn)
+    dgraph_eda["classDistribution"] = compute_dgraph_class_distribution(conn)
+    dgraph_eda["graph"] = compute_dgraph_graph_stats(conn)
+    dgraph_eda["label"] = "DGraph-Fin Users"
+    dgraph_stat_cols = [sc["col"] for sc in DGRAPH_STAT_COLUMNS]
+    dgraph_eda["scatterSample"] = compute_wide_scatter_sample(
+        "gold.dgraph_fin_nodes", dgraph_stat_cols, "label_raw", conn
+    )
+    save_summary("eda_dgraph_fin", dgraph_eda, conn)
+    conn.commit()
+    print("  done")
+
+
+def run_analytics(conn):
+    print("Computing Analytics summary...")
+    analytics = compute_analytics(conn)
+    save_summary("analytics", analytics, conn)
+    conn.commit()
+    print("  done")
+
+
+def run_dashboard(conn):
+    print("Computing Dashboard summary...")
+    dashboard = compute_dashboard_summary(conn)
+    save_summary("dashboard", dashboard, conn)
+    conn.commit()
+    print("  done")
+
+
+def run_datasets(conn):
+    print("Computing Datasets list...")
+    datasets = compute_datasets_list(conn)
+    save_summary("datasets", datasets, conn)
+    conn.commit()
+    print("  done")
+
+
+JOB_FUNCS = {
+    "ieee_eda": run_ieee_eda,
+    "dgraph_eda": run_dgraph_eda,
+    "analytics": run_analytics,
+    "dashboard": run_dashboard,
+    "datasets": run_datasets,
+}
+
+
 def main():
+    parser = argparse.ArgumentParser(
+        description="Precompute EDA/Analytics/Dashboard/Datasets summaries. "
+                     "By default runs ALL jobs. Use --only to run just one or a few."
+    )
+    parser.add_argument("--only", nargs="+", choices=JOBS, default=None)
+    args = parser.parse_args()
+    jobs_to_run = args.only if args.only else JOBS
+
     with engine.connect() as conn:
         conn.execute(text("CREATE SCHEMA IF NOT EXISTS gold"))
         conn.execute(
@@ -564,49 +671,11 @@ def main():
         )
         conn.commit()
 
-        print("Computing IEEE-CIS EDA summary...")
-        ieee_eda = compute_eda_summary(
-            "ieee_cis", "gold.ieee_cis_features", IEEE_STAT_COLUMNS, "is_fraud", "(is_fraud)::int",
-            440, 439, r"^(v\d+|c\d+|d\d+)$", conn
-        )
-        ieee_eda["categorical"] = compute_ieee_categorical(conn)
-        ieee_eda["graph"] = compute_ieee_graph_stats(conn)
-        ieee_eda["label"] = "IEEE-CIS Transactions"
-        save_summary("eda_ieee_cis", ieee_eda, conn)
-        conn.commit()
-        print("  done")
+        print(f"Running job(s): {jobs_to_run}\n")
+        for job in jobs_to_run:
+            JOB_FUNCS[job](conn)
 
-        print("Computing DGraph-Fin EDA summary...")
-        dgraph_eda = compute_eda_summary(
-            "dgraph_fin", "gold.dgraph_fin_nodes", DGRAPH_STAT_COLUMNS, "label", "label_raw",
-            24, 23, r"^x\d+$", conn
-        )
-        dgraph_eda["categorical"] = compute_dgraph_categorical(conn)
-        dgraph_eda["graph"] = compute_dgraph_graph_stats(conn)
-        dgraph_eda["label"] = "DGraph-Fin Users"
-        save_summary("eda_dgraph_fin", dgraph_eda, conn)
-        conn.commit()
-        print("  done")
-
-        print("Computing Analytics summary...")
-        analytics = compute_analytics(conn)
-        save_summary("analytics", analytics, conn)
-        conn.commit()
-        print("  done")
-
-        print("Computing Dashboard summary...")
-        dashboard = compute_dashboard_summary(conn)
-        save_summary("dashboard", dashboard, conn)
-        conn.commit()
-        print("  done")
-
-        print("Computing Datasets list...")
-        datasets = compute_datasets_list(conn)
-        save_summary("datasets", datasets, conn)
-        conn.commit()
-        print("  done")
-
-    print("\nAll summaries precomputed and stored in gold.precomputed_summary.")
+    print(f"\nDone. {len(jobs_to_run)} of {len(JOBS)} real job(s) refreshed in gold.precomputed_summary.")
 
 
 if __name__ == "__main__":

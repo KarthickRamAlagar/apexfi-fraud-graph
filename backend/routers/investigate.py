@@ -16,7 +16,7 @@ MAX_NEIGHBORS = 10
 def format_transaction(row):
     return {
         "id": f"TX-{row.transactionid}",
-        "amount": f"₹{row.transactionamt:,.2f}",
+        "amount": f"${row.transactionamt:,.2f}",
         "productCD": row.productcd,
         "card": f"card1: {int(row.card1)}" if row.card1 is not None else "unknown",
         "device": f"DeviceInfo: {row.deviceinfo}" if row.deviceinfo else "unknown",
