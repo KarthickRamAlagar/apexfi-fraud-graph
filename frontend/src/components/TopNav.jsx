@@ -107,6 +107,12 @@ function MoreMenu() {
               {item.label}
             </NavLink>
           ))}
+          <button
+            onClick={() => { setOpen(false); window.dispatchEvent(new Event('apexfi:start-tour')) }}
+            className="block w-full px-3 py-2 text-sm text-left transition-colors rounded-md text-muted-foreground hover:bg-secondary hover:text-foreground"
+          >
+            Application Tour
+          </button>
         </div>
       )}
     </div>

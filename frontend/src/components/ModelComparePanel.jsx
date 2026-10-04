@@ -59,7 +59,7 @@ const SHORT = {
  * Both models are run on the SERVER on the same input; the PDF is also built
  * server-side, so the browser never supplies the numbers in the report.
  */
-export default function ModelComparePanel({ kind, transactionId, payload }) {
+export default function ModelComparePanel({ kind, transactionId, payload, wide = false }) {
   const [mode, setMode] = useState('both')
   const [pdfState, setPdfState] = useState({ busy: false, error: null })
 
@@ -133,7 +133,7 @@ export default function ModelComparePanel({ kind, transactionId, payload }) {
             </div>
           )}
 
-          <div className="space-y-3">
+          <div className={wide && mode === 'both' ? 'grid grid-cols-1 gap-3 xl:grid-cols-2' : 'space-y-3'}>
             {keys.map((k) => (
               <ModelCard key={k} meta={SHORT[k]} m={data.models[k]} />
             ))}

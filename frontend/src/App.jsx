@@ -1,4 +1,4 @@
-import { HashRouter, Routes, Route } from 'react-router-dom'
+import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import TopNav from '@/components/TopNav'
 import DesktopOnlyGate from '@/components/DesktopOnlyGate'
@@ -49,7 +49,7 @@ export default function App() {
     <QueryClientProvider client={queryClient}>
     <ReactQueryDevtools initialIsOpen={false} />
       <DesktopOnlyGate>
-        <HashRouter>
+        <BrowserRouter>
           <div className="app-gradient-bg" />
           <div className="min-h-screen">
             <TopNav />
@@ -71,7 +71,7 @@ export default function App() {
             </Routes>
           </div>
           <TourGuide />
-        </HashRouter>
+        </BrowserRouter>
       </DesktopOnlyGate>
     </QueryClientProvider>
   )

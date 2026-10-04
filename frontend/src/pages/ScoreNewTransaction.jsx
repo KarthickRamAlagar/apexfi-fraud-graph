@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import ModelComparePanel from '@/components/ModelComparePanel'
 import { useMutation } from '@tanstack/react-query'
 import { motion, AnimatePresence } from 'framer-motion'
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from 'recharts'
@@ -10,7 +11,6 @@ import TransactionGraph from '@/components/TransactionGraph'
 import { Panel } from '@/components/Panel'
 import { api } from '@/lib/api'
 import { cn } from '@/lib/utils'
-import ModelComparePanel from '@/components/ModelComparePanel'
 
 const PRODUCT_CODES = ['W', 'C', 'R', 'H', 'S']
 const CARD_NETWORKS = ['visa', 'mastercard', 'american express', 'discover']
@@ -138,186 +138,192 @@ export default function ScoreNewTransaction() {
         neighbors, combined through the real stacking model. Nothing here is hardcoded or simulated.
       </p>
 
-      <div className="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-[140px_1fr_380px]">
+      <div className="mt-6 grid grid-cols-1 items-start gap-6 lg:grid-cols-[140px_1fr_380px]">
         <Panel className="hidden lg:block">
           <Stepper steps={WIZARD_STEPS} currentStep={currentStep} vertical />
         </Panel>
 
-        <Panel
-          title="Transaction Details"
-          icon={Sparkles}
-          headerAction={
-            <button
-              onClick={handleLoadExample}
-              disabled={mutation.isPending}
-              className="text-xs text-muted-foreground underline-offset-2 hover:text-foreground hover:underline disabled:cursor-not-allowed disabled:opacity-40"
-            >
-              Load Example
-            </button>
-          }
-        >
-          {/* stepper shown inline on smaller screens where the 3-column layout collapses */}
-          <div className="mb-5 lg:hidden">
-            <Stepper steps={WIZARD_STEPS} currentStep={currentStep} vertical />
-          </div>
+        <div className="space-y-6">
+          <Panel
+            title="Transaction Details"
+            icon={Sparkles}
+            headerAction={
+              <button
+                onClick={handleLoadExample}
+                disabled={mutation.isPending}
+                className="text-xs text-muted-foreground underline-offset-2 hover:text-foreground hover:underline disabled:cursor-not-allowed disabled:opacity-40"
+              >
+                Load Example
+              </button>
+            }
+          >
+            {/* stepper shown inline on smaller screens where the 3-column layout collapses */}
+            <div className="mb-5 lg:hidden">
+              <Stepper steps={WIZARD_STEPS} currentStep={currentStep} vertical />
+            </div>
 
-          <div className="min-h-[220px] space-y-5">
-            {currentStep === 0 && (
-              <FieldGroup title="Transaction">
-                <Field label="Amount ($)" required>
-                  <NumberInput
-                    step={0.01}
-                    value={form.transactionamt}
-                    onChange={(v) => update('transactionamt', v)}
-                    placeholder="e.g. 750.00"
-                  />
-                </Field>
-                <Field label="Product Code" required>
-                  <select value={form.productcd} onChange={(e) => update('productcd', e.target.value)} className="w-full rounded-md border border-border bg-secondary/30 px-2.5 py-1.5 text-sm text-foreground outline-none focus:border-primary/50">
-                    {PRODUCT_CODES.map((p) => (
-                      <option key={p} value={p}>{p}</option>
+            <div className="min-h-[220px] space-y-5">
+              {currentStep === 0 && (
+                <FieldGroup title="Transaction">
+                  <Field label="Amount ($)" required>
+                    <NumberInput
+                      step={0.01}
+                      value={form.transactionamt}
+                      onChange={(v) => update('transactionamt', v)}
+                      placeholder="e.g. 750.00"
+                    />
+                  </Field>
+                  <Field label="Product Code" required>
+                    <select value={form.productcd} onChange={(e) => update('productcd', e.target.value)} className="w-full rounded-md border border-border bg-secondary/30 px-2.5 py-1.5 text-sm text-foreground outline-none focus:border-primary/50">
+                      {PRODUCT_CODES.map((p) => (
+                        <option key={p} value={p}>{p}</option>
+                      ))}
+                    </select>
+                  </Field>
+                </FieldGroup>
+              )}
+
+              {currentStep === 1 && (
+                <FieldGroup title="Card Information">
+                  <Field label="Card1"><NumberInput value={form.card1} onChange={(v) => update('card1', v)} /></Field>
+                  <Field label="Card2"><NumberInput value={form.card2} onChange={(v) => update('card2', v)} /></Field>
+                  <Field label="Card3"><NumberInput value={form.card3} onChange={(v) => update('card3', v)} /></Field>
+                  <Field label="Network">
+                    <select value={form.card4} onChange={(e) => update('card4', e.target.value)} className="w-full rounded-md border border-border bg-secondary/30 px-2.5 py-1.5 text-sm text-foreground outline-none focus:border-primary/50">
+                      <option value="">Unknown</option>
+                      {CARD_NETWORKS.map((c) => <option key={c} value={c}>{c}</option>)}
+                    </select>
+                  </Field>
+                  <Field label="Card5"><NumberInput value={form.card5} onChange={(v) => update('card5', v)} /></Field>
+                  <Field label="Type">
+                    <select value={form.card6} onChange={(e) => update('card6', e.target.value)} className="w-full rounded-md border border-border bg-secondary/30 px-2.5 py-1.5 text-sm text-foreground outline-none focus:border-primary/50">
+                      <option value="">Unknown</option>
+                      {CARD_TYPES.map((c) => <option key={c} value={c}>{c}</option>)}
+                    </select>
+                  </Field>
+                </FieldGroup>
+              )}
+
+              {currentStep === 2 && (
+                <>
+                  <FieldGroup title="Address">
+                    <Field label="Addr1"><NumberInput value={form.addr1} onChange={(v) => update('addr1', v)} /></Field>
+                    <Field label="Addr2"><NumberInput value={form.addr2} onChange={(v) => update('addr2', v)} /></Field>
+                  </FieldGroup>
+                  <FieldGroup title="Email">
+                    <Field label="Purchaser email domain"><input value={form.p_emaildomain} onChange={(e) => update('p_emaildomain', e.target.value)} placeholder="e.g. gmail.com" className="w-full rounded-md border border-border bg-secondary/30 px-2.5 py-1.5 text-sm text-foreground outline-none focus:border-primary/50" /></Field>
+                    <Field label="Recipient email domain"><input value={form.r_emaildomain} onChange={(e) => update('r_emaildomain', e.target.value)} placeholder="optional" className="w-full rounded-md border border-border bg-secondary/30 px-2.5 py-1.5 text-sm text-foreground outline-none focus:border-primary/50" /></Field>
+                  </FieldGroup>
+                </>
+              )}
+
+              {currentStep === 3 && (
+                <FieldGroup title="Device">
+                  <Field label="Device Type">
+                    <select value={form.devicetype} onChange={(e) => update('devicetype', e.target.value)} className="w-full rounded-md border border-border bg-secondary/30 px-2.5 py-1.5 text-sm text-foreground outline-none focus:border-primary/50">
+                      <option value="">Unknown</option>
+                      {DEVICE_TYPES.map((d) => <option key={d} value={d}>{d}</option>)}
+                    </select>
+                  </Field>
+                  <Field label="Device Info"><input value={form.deviceinfo} onChange={(e) => update('deviceinfo', e.target.value)} placeholder="e.g. SM-G950U Build/R16NW" className="w-full rounded-md border border-border bg-secondary/30 px-2.5 py-1.5 text-sm text-foreground outline-none focus:border-primary/50" /></Field>
+                </FieldGroup>
+              )}
+
+              {currentStep === 4 && (
+                <div>
+                  <div className="mb-2 text-xs font-medium tracking-wide uppercase text-muted-foreground">
+                    Counting Features (C1–C14)
+                  </div>
+                  <p className="mb-3 text-xs text-muted-foreground">
+                    Real behavioral counts (e.g. addresses/emails associated with this card) — exact
+                    per-field definitions aren't publicly documented by the source dataset, but a real
+                    production system would have these. Optional; improves accuracy when known.
+                  </p>
+                  <div className="grid grid-cols-4 gap-3 sm:grid-cols-7">
+                    {['c1', 'c2', 'c3', 'c4', 'c5', 'c6', 'c7', 'c8', 'c9', 'c10', 'c11', 'c12', 'c13', 'c14'].map((f) => (
+                      <Field key={f} label={f.toUpperCase()}>
+                        <NumberInput value={form[f]} onChange={(v) => update(f, v)} />
+                      </Field>
                     ))}
-                  </select>
-                </Field>
-              </FieldGroup>
-            )}
+                  </div>
+                </div>
+              )}
 
-            {currentStep === 1 && (
-              <FieldGroup title="Card Information">
-                <Field label="Card1"><NumberInput value={form.card1} onChange={(v) => update('card1', v)} /></Field>
-                <Field label="Card2"><NumberInput value={form.card2} onChange={(v) => update('card2', v)} /></Field>
-                <Field label="Card3"><NumberInput value={form.card3} onChange={(v) => update('card3', v)} /></Field>
-                <Field label="Network">
-                  <select value={form.card4} onChange={(e) => update('card4', e.target.value)} className="w-full rounded-md border border-border bg-secondary/30 px-2.5 py-1.5 text-sm text-foreground outline-none focus:border-primary/50">
-                    <option value="">Unknown</option>
-                    {CARD_NETWORKS.map((c) => <option key={c} value={c}>{c}</option>)}
-                  </select>
-                </Field>
-                <Field label="Card5"><NumberInput value={form.card5} onChange={(v) => update('card5', v)} /></Field>
-                <Field label="Type">
-                  <select value={form.card6} onChange={(e) => update('card6', e.target.value)} className="w-full rounded-md border border-border bg-secondary/30 px-2.5 py-1.5 text-sm text-foreground outline-none focus:border-primary/50">
-                    <option value="">Unknown</option>
-                    {CARD_TYPES.map((c) => <option key={c} value={c}>{c}</option>)}
-                  </select>
-                </Field>
-              </FieldGroup>
-            )}
+              {currentStep === 5 && (
+                <div>
+                  <div className="mb-2 text-xs font-medium tracking-wide uppercase text-muted-foreground">
+                    Device Telemetry
+                  </div>
+                  <p className="mb-3 text-xs text-muted-foreground">
+                    Numeric session/device signals a real system would capture at transaction time. Optional.
+                  </p>
+                  <div className="grid grid-cols-3 gap-3 sm:grid-cols-6">
+                    {['id_02', 'id_11', 'id_14', 'id_17', 'id_19', 'id_20'].map((f) => (
+                      <Field key={f} label={f}>
+                        <NumberInput value={form[f]} onChange={(v) => update(f, v)} />
+                      </Field>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
 
-            {currentStep === 2 && (
-              <>
-                <FieldGroup title="Address">
-                  <Field label="Addr1"><NumberInput value={form.addr1} onChange={(v) => update('addr1', v)} /></Field>
-                  <Field label="Addr2"><NumberInput value={form.addr2} onChange={(v) => update('addr2', v)} /></Field>
-                </FieldGroup>
-                <FieldGroup title="Email">
-                  <Field label="Purchaser email domain"><input value={form.p_emaildomain} onChange={(e) => update('p_emaildomain', e.target.value)} placeholder="e.g. gmail.com" className="w-full rounded-md border border-border bg-secondary/30 px-2.5 py-1.5 text-sm text-foreground outline-none focus:border-primary/50" /></Field>
-                  <Field label="Recipient email domain"><input value={form.r_emaildomain} onChange={(e) => update('r_emaildomain', e.target.value)} placeholder="optional" className="w-full rounded-md border border-border bg-secondary/30 px-2.5 py-1.5 text-sm text-foreground outline-none focus:border-primary/50" /></Field>
-                </FieldGroup>
-              </>
-            )}
+            <div className="flex items-center justify-between pt-5 mt-6 border-t border-border/60">
+              <button
+                onClick={goPrevious}
+                disabled={currentStep === 0 || mutation.isPending}
+                className="flex items-center gap-1.5 rounded-lg border border-border px-4 py-2.5 text-sm text-muted-foreground transition-colors hover:bg-secondary disabled:cursor-not-allowed disabled:opacity-40"
+              >
+                <ArrowLeft size={14} /> Previous
+              </button>
 
-            {currentStep === 3 && (
-              <FieldGroup title="Device">
-                <Field label="Device Type">
-                  <select value={form.devicetype} onChange={(e) => update('devicetype', e.target.value)} className="w-full rounded-md border border-border bg-secondary/30 px-2.5 py-1.5 text-sm text-foreground outline-none focus:border-primary/50">
-                    <option value="">Unknown</option>
-                    {DEVICE_TYPES.map((d) => <option key={d} value={d}>{d}</option>)}
-                  </select>
-                </Field>
-                <Field label="Device Info"><input value={form.deviceinfo} onChange={(e) => update('deviceinfo', e.target.value)} placeholder="e.g. SM-G950U Build/R16NW" className="w-full rounded-md border border-border bg-secondary/30 px-2.5 py-1.5 text-sm text-foreground outline-none focus:border-primary/50" /></Field>
-              </FieldGroup>
-            )}
+              {currentStep < WIZARD_STEPS.length - 1 ? (
+                <button
+                  onClick={goNext}
+                  disabled={currentStep === 0 && !form.transactionamt}
+                  className="flex items-center gap-1.5 rounded-lg bg-primary px-5 py-2.5 text-sm font-medium text-primary-foreground transition-transform hover:scale-105 disabled:cursor-not-allowed disabled:opacity-40"
+                >
+                  Next <ArrowRight size={14} />
+                </button>
+              ) : (
+                <button
+                  onClick={handleAnalyze}
+                  disabled={mutation.isPending || !form.transactionamt}
+                  className="rounded-lg bg-primary px-5 py-2.5 text-sm font-medium text-primary-foreground transition-transform hover:scale-105 disabled:cursor-not-allowed disabled:opacity-40"
+                >
+                  {mutation.isPending ? 'Analyzing…' : 'Analyze Transaction'}
+                </button>
+              )}
+            </div>
 
-            {currentStep === 4 && (
-              <div>
-                <div className="mb-2 text-xs font-medium tracking-wide uppercase text-muted-foreground">
-                  Counting Features (C1–C14)
+            {result && result.graphContext.hop1Neighbors > 0 && (
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="pt-5 mt-6 border-t border-border/60"
+              >
+                <div className="flex items-center gap-2 mb-3 text-sm font-medium text-foreground">
+                  <Share2 size={15} className="text-muted-foreground" />
+                  Connected Network
                 </div>
                 <p className="mb-3 text-xs text-muted-foreground">
-                  Real behavioral counts (e.g. addresses/emails associated with this card) — exact
-                  per-field definitions aren't publicly documented by the source dataset, but a real
-                  production system would have these. Optional; improves accuracy when known.
+                  This transaction (center) connected to its real matched existing neighbors.
                 </p>
-                <div className="grid grid-cols-4 gap-3 sm:grid-cols-7">
-                  {['c1', 'c2', 'c3', 'c4', 'c5', 'c6', 'c7', 'c8', 'c9', 'c10', 'c11', 'c12', 'c13', 'c14'].map((f) => (
-                    <Field key={f} label={f.toUpperCase()}>
-                      <NumberInput value={form[f]} onChange={(v) => update(f, v)} />
-                    </Field>
-                  ))}
+                <div className="flex justify-center overflow-hidden">
+                  <TransactionGraph
+                    center={{ id: 'TX-NEW', amount: form.transactionamt ? `$${form.transactionamt}` : '—' }}
+                    neighbors={result.graphContext.matchedNeighbors ?? []}
+                    onSelectNode={() => {}}
+                  />
                 </div>
-              </div>
+              </motion.div>
             )}
+          </Panel>
 
-            {currentStep === 5 && (
-              <div>
-                <div className="mb-2 text-xs font-medium tracking-wide uppercase text-muted-foreground">
-                  Device Telemetry
-                </div>
-                <p className="mb-3 text-xs text-muted-foreground">
-                  Numeric session/device signals a real system would capture at transaction time. Optional.
-                </p>
-                <div className="grid grid-cols-3 gap-3 sm:grid-cols-6">
-                  {['id_02', 'id_11', 'id_14', 'id_17', 'id_19', 'id_20'].map((f) => (
-                    <Field key={f} label={f}>
-                      <NumberInput value={form[f]} onChange={(v) => update(f, v)} />
-                    </Field>
-                  ))}
-                </div>
-              </div>
-            )}
-          </div>
-
-          <div className="flex items-center justify-between pt-5 mt-6 border-t border-border/60">
-            <button
-              onClick={goPrevious}
-              disabled={currentStep === 0 || mutation.isPending}
-              className="flex items-center gap-1.5 rounded-lg border border-border px-4 py-2.5 text-sm text-muted-foreground transition-colors hover:bg-secondary disabled:cursor-not-allowed disabled:opacity-40"
-            >
-              <ArrowLeft size={14} /> Previous
-            </button>
-
-            {currentStep < WIZARD_STEPS.length - 1 ? (
-              <button
-                onClick={goNext}
-                disabled={currentStep === 0 && !form.transactionamt}
-                className="flex items-center gap-1.5 rounded-lg bg-primary px-5 py-2.5 text-sm font-medium text-primary-foreground transition-transform hover:scale-105 disabled:cursor-not-allowed disabled:opacity-40"
-              >
-                Next <ArrowRight size={14} />
-              </button>
-            ) : (
-              <button
-                onClick={handleAnalyze}
-                disabled={mutation.isPending || !form.transactionamt}
-                className="rounded-lg bg-primary px-5 py-2.5 text-sm font-medium text-primary-foreground transition-transform hover:scale-105 disabled:cursor-not-allowed disabled:opacity-40"
-              >
-                {mutation.isPending ? 'Analyzing…' : 'Analyze Transaction'}
-              </button>
-            )}
-          </div>
-
-          {result && result.graphContext.hop1Neighbors > 0 && (
-            <motion.div
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="pt-5 mt-6 border-t border-border/60"
-            >
-              <div className="flex items-center gap-2 mb-3 text-sm font-medium text-foreground">
-                <Share2 size={15} className="text-muted-foreground" />
-                Connected Network
-              </div>
-              <p className="mb-3 text-xs text-muted-foreground">
-                This transaction (center) connected to its real matched existing neighbors.
-              </p>
-              <div className="flex justify-center overflow-hidden">
-                <TransactionGraph
-                  center={{ id: 'TX-NEW', amount: form.transactionamt ? `$${form.transactionamt}` : '—' }}
-                  neighbors={result.graphContext.matchedNeighbors ?? []}
-                  onSelectNode={() => {}}
-                />
-              </div>
-            </motion.div>
+          {result && !mutation.isPending && mutation.variables && (
+            <ModelComparePanel kind="new" payload={mutation.variables} wide />
           )}
-        </Panel>
+        </div>
 
         <div className="space-y-4">
           <AnimatePresence mode="wait">
@@ -347,7 +353,6 @@ export default function ScoreNewTransaction() {
                 <Panel title="Graph Context" icon={Share2}>
                   <GraphContextPanel graphContext={result.graphContext} />
                 </Panel>
-                {mutation.variables && <ModelComparePanel kind="new" payload={mutation.variables} />}
                 <button
                   onClick={handleScoreAnother}
                   className="w-full rounded-lg border border-border py-2.5 text-sm text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"

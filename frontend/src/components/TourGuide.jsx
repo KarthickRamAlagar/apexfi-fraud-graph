@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
-import { X, ChevronLeft, ChevronRight, Compass } from 'lucide-react'
+import { X, ChevronLeft, ChevronRight } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 // Guided walkthrough: moves through the app page by page with a short caption.
@@ -19,40 +19,111 @@ const STEPS = [
   { path: '/ask', title: 'Ask your data', text: 'Ask a question in plain English (or by voice) and get an answer from the real Gold layer.' },
 ]
 
+const SEEN_KEY = 'apexfi_tour_seen'
+export const START_TOUR_EVENT = 'apexfi:start-tour'
+
+function hasSeenTour() {
+  try { return localStorage.getItem(SEEN_KEY) === '1' } catch { return false }
+}
+function markTourSeen() {
+  try { localStorage.setItem(SEEN_KEY, '1') } catch { /* private mode: just ask again next visit */ }
+}
+
+// Small original mascot (inline SVG, no image file needed).
+function Mascot({ size = 64 }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 64 64" role="img" aria-label="ApexFi guide">
+      <line x1="32" y1="6" x2="32" y2="14" stroke="hsl(var(--primary))" strokeWidth="3" strokeLinecap="round" />
+      <circle cx="32" cy="5" r="3.5" fill="hsl(var(--primary))" />
+      <rect x="10" y="14" width="44" height="34" rx="12" fill="hsl(var(--card))" stroke="hsl(var(--primary))" strokeWidth="3" />
+      <rect x="16" y="22" width="32" height="18" rx="8" fill="hsl(var(--background))" />
+      <circle cx="25" cy="31" r="4" fill="hsl(var(--primary))" />
+      <circle cx="39" cy="31" r="4" fill="hsl(var(--primary))" />
+      <circle cx="26.2" cy="29.8" r="1.2" fill="#fff" />
+      <circle cx="40.2" cy="29.8" r="1.2" fill="#fff" />
+      <path d="M26 44 Q32 48 38 44" stroke="hsl(var(--primary))" strokeWidth="2" fill="none" strokeLinecap="round" />
+      <rect x="4" y="26" width="5" height="12" rx="2.5" fill="hsl(var(--primary))" />
+      <rect x="55" y="26" width="5" height="12" rx="2.5" fill="hsl(var(--primary))" />
+      <rect x="20" y="50" width="24" height="9" rx="4" fill="hsl(var(--primary))" opacity="0.85" />
+    </svg>
+  )
+}
+
 export default function TourGuide() {
-  const [step, setStep] = useState(-1) // -1 = closed
+  const [step, setStep] = useState(-1) // -1 = tour closed
+  const [askOpen, setAskOpen] = useState(false)
   const navigate = useNavigate()
   const location = useLocation()
   const open = step >= 0
+
+  // First visit only: after a short pause, the guide asks if you want the tour.
+  useEffect(() => {
+    if (hasSeenTour()) return
+    const t = setTimeout(() => setAskOpen(true), 1200)
+    return () => clearTimeout(t)
+  }, [])
+
+  // Lets other parts of the app (More menu, About page) start the tour on demand.
+  useEffect(() => {
+    const start = () => { setAskOpen(false); setStep(0) }
+    window.addEventListener(START_TOUR_EVENT, start)
+    return () => window.removeEventListener(START_TOUR_EVENT, start)
+  }, [])
 
   useEffect(() => {
     if (open && STEPS[step] && location.pathname !== STEPS[step].path) navigate(STEPS[step].path)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [step])
 
+  function answer(startNow) {
+    markTourSeen()
+    setAskOpen(false)
+    if (startNow) setStep(0)
+  }
+  function closeTour() {
+    markTourSeen()
+    setStep(-1)
+  }
+
   const s = STEPS[step]
 
   if (!open) {
+    if (!askOpen) return null
     return (
-      <button
-        onClick={() => setStep(0)}
-        className="fixed z-40 flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-full shadow-lg bottom-5 left-5 bg-primary text-primary-foreground hover:scale-105 transition-transform"
-      >
-        <Compass size={16} /> Take a tour
-      </button>
+      <div className="fixed z-40 flex items-start gap-2 top-20 right-6 animate-in fade-in slide-in-from-top-2" role="dialog" aria-label="Application tour">
+        <div className="relative w-[280px] rounded-2xl rounded-tr-sm border border-border bg-card/95 p-4 shadow-2xl backdrop-blur-xl">
+          <button onClick={() => answer(false)} aria-label="Dismiss" className="absolute text-muted-foreground top-2 right-2 hover:text-foreground">
+            <X size={14} />
+          </button>
+          <div className="text-sm font-semibold font-display">Hi, I'm Apex!</div>
+          <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
+            New here? Shall I show you around ApexFi? It takes about two minutes and I'll open each page for you.
+          </p>
+          <div className="flex gap-2 mt-3">
+            <button onClick={() => answer(true)} className="px-3 py-1.5 text-xs font-medium rounded-md bg-primary text-primary-foreground hover:opacity-90">
+              Yes, show me around
+            </button>
+            <button onClick={() => answer(false)} className="px-3 py-1.5 text-xs border rounded-md border-border text-muted-foreground hover:bg-secondary">
+              Maybe later
+            </button>
+          </div>
+          <p className="mt-2 text-[10px] text-muted-foreground">You can start it any time from More → Application Tour.</p>
+        </div>
+        <div className="shrink-0 drop-shadow-lg"><Mascot /></div>
+      </div>
     )
   }
 
   return (
-    <div className="fixed z-40 w-[340px] border shadow-2xl bottom-5 left-5 rounded-2xl border-border bg-card/95 backdrop-blur-xl">
+    <div className="fixed z-40 w-[340px] border shadow-2xl top-20 right-6 rounded-2xl border-border bg-card/95 backdrop-blur-xl">
       <div className="flex items-start gap-3 p-4">
-        <img src="/images/apexfi-logo.png" alt="Guide" className="object-contain w-12 h-12 shrink-0" />
+        <div className="shrink-0"><Mascot size={44} /></div>
         <div className="min-w-0">
           <div className="text-[11px] uppercase tracking-wide text-muted-foreground">Step {step + 1} of {STEPS.length}</div>
           <div className="text-sm font-semibold font-display">{s.title}</div>
           <p className="mt-1 text-xs leading-relaxed text-muted-foreground">{s.text}</p>
         </div>
-        <button onClick={() => setStep(-1)} aria-label="Close tour" className="text-muted-foreground hover:text-foreground">
+        <button onClick={closeTour} aria-label="Close tour" className="text-muted-foreground hover:text-foreground">
           <X size={16} />
         </button>
       </div>
@@ -75,7 +146,7 @@ export default function TourGuide() {
               Next <ChevronRight size={12} />
             </button>
           ) : (
-            <button onClick={() => setStep(-1)} className="px-2.5 py-1 text-xs rounded-md bg-primary text-primary-foreground">Finish</button>
+            <button onClick={closeTour} className="px-2.5 py-1 text-xs rounded-md bg-primary text-primary-foreground">Finish</button>
           )}
         </div>
       </div>
