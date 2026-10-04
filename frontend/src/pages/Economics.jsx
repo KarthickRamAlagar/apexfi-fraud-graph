@@ -1,7 +1,8 @@
 import { useMemo, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine, Legend } from 'recharts'
-import { Coins, SlidersHorizontal, Globe2 } from 'lucide-react'
+import { Coins, SlidersHorizontal } from 'lucide-react'
+import SdgImpact from '@/components/SdgImpact'
 import { Panel } from '@/components/Panel'
 import { api } from '@/lib/api'
 import { cn } from '@/lib/utils'
@@ -18,13 +19,6 @@ const DEFAULTS = {
 }
 
 const money = (v) => `$${Math.round(v).toLocaleString()}`
-
-const SDGS = [
-  { n: 8, t: 'Decent Work & Economic Growth', target: 'Target 8.10', text: 'Stronger, safer financial institutions that can expand trusted access to banking and payments.' },
-  { n: 16, t: 'Peace, Justice & Strong Institutions', target: 'Target 16.4', text: 'Detecting fraud and the networks behind it supports the fight against illicit financial flows.' },
-  { n: 1, t: 'No Poverty', target: 'Target 1.4', text: 'Lower fraud losses help keep digital financial services affordable and trusted for everyone, including first-time users.' },
-  { n: 9, t: 'Industry, Innovation & Infrastructure', target: 'Goal 9 (innovation)', text: 'Explainable AI applied to resilient digital payment infrastructure.' },
-]
 
 export default function Economics() {
   const [a, setA] = useState(DEFAULTS)
@@ -135,24 +129,13 @@ export default function Economics() {
         </div>
       </Panel>
 
-      <Panel title="Link to the UN Sustainable Development Goals" icon={Globe2} className="mt-6">
-        <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-4">
-          {SDGS.map((s) => (
-            <div key={s.n} className="p-3 border rounded-xl border-border/60 bg-secondary/20">
-              <div className="flex items-center gap-2">
-                <span className="flex items-center justify-center w-7 h-7 rounded-md bg-primary/15 text-sm font-semibold text-primary">{s.n}</span>
-                <div className="text-sm font-medium leading-tight">{s.t}</div>
-              </div>
-              <div className="mt-2 text-[11px] text-primary">{s.target}</div>
-              <p className="mt-1 text-xs leading-relaxed text-muted-foreground">{s.text}</p>
-            </div>
-          ))}
-        </div>
-        <p className="mt-3 text-[11px] leading-relaxed text-muted-foreground">
-          This is a conceptual alignment, not a measured SDG outcome: the results above come from a public benchmark dataset
-          and a research model, and real-world impact would need deployment data.
-        </p>
-      </Panel>
+      <SdgImpact
+        sweep={sweep}
+        avgAmount={a.avgAmount}
+        preventionRate={a.preventionRate}
+        lossGivenMiss={a.lossGivenMiss}
+        db={data.databaseOptimization?.after}
+      />
     </div>
   )
 }

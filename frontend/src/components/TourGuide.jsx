@@ -13,8 +13,9 @@ const STEPS = [
   { path: '/score-new', title: 'Score a new transaction', text: 'Enter a transaction the model has never seen and get a live prediction with an explanation and its graph context.' },
   { path: '/score-account', title: 'Score an unlabeled account', text: 'DGraph-Fin has millions of genuinely unlabeled accounts. Score one and see signed SHAP reasons for the decision.' },
   { path: '/model-comparison', title: 'Time-series vs non-time-series', text: 'The same problem with a random split versus a chronological split. Toggle between the two and see why the realistic numbers are lower.' },
-  { path: '/economics', title: 'Economic & SDG impact', text: 'Turns the confusion matrix into money with editable, clearly labeled assumptions, and links the work to SDGs 8, 16, 1 and 9.' },
+  { path: '/economics', title: 'Economic & SDG impact', text: 'Turns the confusion matrix into money with editable, clearly labeled assumptions, and then scales the measured rates to a daily volume you choose (slider) to show what they would mean for SDGs 16, 8, 1 and 9.' },
   { path: '/temporal-full-report', title: 'Full evaluation report', text: 'Thresholds, SHAP, feature ablation, the hybrid-model fix and the database indexing speed-up (6.4 s → 0.14 s).' },
+  { path: '/about', title: 'About', text: 'The whole story on one page: problem, data, pipeline, models, security measures, limitations and what is still planned.' },
   { path: '/ask', title: 'Ask your data', text: 'Ask a question in plain English (or by voice) and get an answer from the real Gold layer.' },
 ]
 
