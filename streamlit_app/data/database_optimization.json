@@ -1,0 +1,17 @@
+{
+  "before": {
+    "avg_ms": 6373.61,
+    "p95_ms": 6994.34,
+    "indexes": "only idx_ieee_features_txnid"
+  },
+  "after": {
+    "avg_ms": 137.75,
+    "p95_ms": 181.97,
+    "indexes": "added (card1, transactiondt) and (deviceinfo, transactiondt) composite indexes"
+  },
+  "improvement_pct": {
+    "avg": 97.8,
+    "p95": 97.4
+  },
+  "note": "Real, measured before/after latency for the live scoring endpoint's real database queries, following the addition of composite indexes on the exact columns the rolling-window lookup filters on."
+}

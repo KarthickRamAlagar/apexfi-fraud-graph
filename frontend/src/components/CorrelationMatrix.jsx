@@ -9,14 +9,14 @@ export default function CorrelationMatrix({ labels, fullLabels, matrix }) {
   const [hover, setHover] = useState(null) // { i, j }
 
   return (
-    <table className="border-separate" style={{ borderSpacing: 6 }}>
+    <table className="border-separate" style={{ borderSpacing: 4 }}>
       <thead>
         <tr>
-          <th className="w-24" />
+          <th className="w-18" />
           {labels.map((l, j) => (
             <th
               key={l}
-              className="px-1 pb-2 text-xs font-medium text-muted-foreground transition-colors"
+              className="px-1 pb-2 text-xs font-medium transition-colors text-muted-foreground"
               style={{ color: hover?.j === j ? 'hsl(var(--foreground))' : undefined }}
             >
               {l}
@@ -28,7 +28,7 @@ export default function CorrelationMatrix({ labels, fullLabels, matrix }) {
         {matrix.map((row, i) => (
           <tr key={labels[i]}>
             <td
-              className="pr-3 text-right text-xs font-medium text-muted-foreground transition-colors"
+              className="pr-3 text-xs font-medium text-right transition-colors text-muted-foreground"
               style={{ color: hover?.i === i ? 'hsl(var(--foreground))' : undefined }}
             >
               {labels[i]}
@@ -40,10 +40,10 @@ export default function CorrelationMatrix({ labels, fullLabels, matrix }) {
                   <div
                     onMouseEnter={() => setHover({ i, j })}
                     onMouseLeave={() => setHover(null)}
-                    className="flex h-16 w-20 cursor-default flex-col items-center justify-center gap-0.5 rounded-lg text-sm font-mono tabular-nums transition-all duration-150"
+                    className="flex h-12 w-12 cursor-default flex-col items-center justify-center gap-0.5 rounded-lg text-sm font-mono tabular-nums transition-all duration-150"
                     style={{
                       background: cellColor(v),
-                      transform: hover?.i === i && hover?.j === j ? 'scale(1.08)' : 'scale(1)',
+                      transform: hover?.i === i && hover?.j === j ? 'scale(1.2)' : 'scale(1)',
                       opacity: hover && !isActive ? 0.45 : 1,
                     }}
                   >
@@ -56,7 +56,7 @@ export default function CorrelationMatrix({ labels, fullLabels, matrix }) {
         ))}
       </tbody>
       {hover && fullLabels && (
-        <caption className="mt-3 caption-bottom text-xs text-muted-foreground">
+        <caption className="mt-3 text-xs caption-bottom text-muted-foreground">
           {fullLabels[hover.i]} × {fullLabels[hover.j]}: correlation {matrix[hover.i][hover.j].toFixed(2)}
         </caption>
       )}

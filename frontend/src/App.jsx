@@ -13,7 +13,7 @@ import AskYourData from '@/pages/AskYourData'
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools'
 import EthereumFraud from '@/pages/EthereumFraud'
 import TemporalValidation from '@/pages/TemporalValidation'
-
+import TemporalFullReportPage from '@/pages/TemporalFullReportPage'
 // Real Gold-layer data doesn't change between page visits within a
 // session (it's precomputed / refreshed only when you re-run the
 // precompute script), so a 5-minute staleTime avoids refetching every
@@ -32,7 +32,8 @@ const queryClient = new QueryClient({
     queries: {
       staleTime: 60 * 60 * 1000, // 1 hour
       gcTime: 2 * 60 * 60 * 1000, // 2 hours — cache survives well beyond any single session of navigating around
-      retry: 1,
+      retry: 10,
+      retryDelay: (attemptIndex) => Math.min(2000 * 2 ** attemptIndex, 15000),
       refetchOnWindowFocus: false,
       refetchOnMount: false, // trust the cache once it's loaded once this session
     },
@@ -59,6 +60,7 @@ export default function App() {
               <Route path="/ask" element={<AskYourData />} />
               <Route path="/ethereum-fraud" element={<EthereumFraud />} />
               <Route path="/temporal-validation" element={<TemporalValidation />} />
+              <Route path="/temporal-full-report" element={<TemporalFullReportPage />} />
             </Routes>
           </div>
         </HashRouter>

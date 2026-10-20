@@ -11,6 +11,7 @@ import { InvestigateSkeleton } from '@/components/PageSkeletons'
 import { Skeleton } from '@/components/ui/skeleton'
 import { api } from '@/lib/api'
 import { cn } from '@/lib/utils'
+import LoadingOverlay from '@/components/LoadingOverlay'
 
 export default function Investigate() {
   const [searchParams] = useSearchParams()
@@ -62,9 +63,9 @@ export default function Investigate() {
     )
   }
 
-  if (samples.length === 0 && !error) {
-    return <InvestigateSkeleton />
-  }
+if (samples.length === 0 && !error) {
+    return <LoadingOverlay><InvestigateSkeleton /></LoadingOverlay>
+}
 
   return (
     <div className="container py-8 space-y-6">

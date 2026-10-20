@@ -322,3 +322,5 @@ assumed risk. **See the Temporal Validation section for two further,
 independent confirmations of this same real pattern.**
 
 ---
+uv run streamlit run Home.py
+uv run uvicorn backend.main:app --reload
