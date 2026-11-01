@@ -46,4 +46,8 @@ temporalScore: (payload) => fetchJson('/api/temporal-validation/score', {
   body: JSON.stringify(payload),
 }),
 temporalFullReport: () => fetchJson('/api/temporal-validation/full-report'),
+  sdgManual: (payload) => fetchJson('/api/sdg/manual', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) }),
+  sdgEngineMeta: () => fetchJson('/api/sdg/engine/meta'),
+  sdgEngineReplay: (payload) => fetchJson('/api/sdg/engine/replay', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) }),
+  sdgEnginePayload: (payload) => fetchJson('/api/sdg/engine/payload', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) }),
 }

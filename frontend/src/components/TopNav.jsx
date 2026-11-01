@@ -20,6 +20,7 @@ const MORE_ITEMS = [
   { path: '/ethereum-fraud', label: 'Blockchain Fraud (Experiment)' },
   { path: '/temporal-validation', label: 'Temporal Validation (Research)' },
   { path: '/temporal-full-report', label: 'Full Temporal Report' },
+  { path: '/sdg-lab', label: 'SDG Lab (V2)' },
   { path: '/model-comparison', label: 'Model Comparison (Time-series vs Not)' },
   { path: '/economics', label: 'Economic & SDG Impact' },
   { path: '/about', label: 'About ApexFi' },
