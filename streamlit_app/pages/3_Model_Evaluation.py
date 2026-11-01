@@ -115,14 +115,27 @@ for key, label in DATASETS:
 
     st.divider()
 
+def _react_app_url():
+    import os
+    url = os.getenv("REACT_APP_URL")
+    if not url:
+        try:
+            url = st.secrets.get("REACT_APP_URL")
+        except Exception:
+            url = None
+    return (url or "http://localhost:5173").rstrip("/")
+
+
+_APP_URL = _react_app_url()
+
 st.markdown("**Try it live — real inference on genuinely new, previously-unseen data:**")
 _link_cols = st.columns(3)
 with _link_cols[0]:
-    st.link_button("Look up a real transaction", "http://localhost:5173/investigate")
+    st.link_button("Look up a real transaction", f"{_APP_URL}/investigate")
 with _link_cols[1]:
-    st.link_button("Score a new IEEE-CIS transaction", "http://localhost:5173/score-new")
+    st.link_button("Score a new IEEE-CIS transaction", f"{_APP_URL}/score-new")
 with _link_cols[2]:
-    st.link_button("Score an unlabeled DGraph-Fin account", "http://localhost:5173/score-account")
+    st.link_button("Score an unlabeled DGraph-Fin account", f"{_APP_URL}/score-account")
 
 st.caption(
     "**Why two models, not one:** IEEE-CIS transactions and DGraph-Fin users are "

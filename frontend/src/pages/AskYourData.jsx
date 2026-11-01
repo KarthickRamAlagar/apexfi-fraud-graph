@@ -6,7 +6,7 @@ import GovEmblem from '@/components/GovEmblem'
 import { cn } from '@/lib/utils'
 import { suggestedQuestions, LANGUAGES } from '@/lib/mockAsk'
 
-const API_BASE = 'http://localhost:8000'
+const API_BASE = import.meta.env.VITE_API_BASE || 'http://localhost:8000'
 
 const MAX_QUESTIONS = 5
 const RESET_MS = 5 * 60 * 1000 // 5 minutes

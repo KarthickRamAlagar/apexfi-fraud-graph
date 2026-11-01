@@ -7,6 +7,7 @@ from fastapi import APIRouter, HTTPException
 from sqlalchemy import text
 
 from backend.db import engine
+from etl.db.jsonutil import as_json
 
 router = APIRouter(prefix="/api/analytics", tags=["analytics"])
 
@@ -24,6 +25,6 @@ def get_analytics():
             "No precomputed summary found — run: uv run python -m backend.services.precompute_summaries",
         )
 
-    payload = row.payload
+    payload = as_json(row.payload)
     payload["computedAt"] = row.computed_at.isoformat()
     return payload

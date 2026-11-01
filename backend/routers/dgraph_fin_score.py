@@ -51,15 +51,14 @@ def get_background_samples():
     """A real mix of background (unlabeled) account IDs to get started
     with — genuinely unknown outcomes, not hand-picked for effect.
     """
+    if engine.dialect.name == "duckdb":
+        sample_sql = ("SELECT node_id, total_degree FROM gold.dgraph_fin_nodes "
+                      "WHERE label NOT IN ('fraud', 'normal') ORDER BY random() LIMIT 8")
+    else:
+        sample_sql = ("SELECT node_id, total_degree FROM gold.dgraph_fin_nodes TABLESAMPLE SYSTEM (1) "
+                      "WHERE label NOT IN ('fraud', 'normal') LIMIT 8")
     with engine.connect() as conn:
-        rows = conn.execute(
-            text(
-                """SELECT node_id, total_degree FROM gold.dgraph_fin_nodes
-                   TABLESAMPLE SYSTEM (1)
-                   WHERE label NOT IN ('fraud', 'normal')
-                   LIMIT 8"""
-            )
-        ).fetchall()
+        rows = conn.execute(text(sample_sql)).fetchall()
     return {"samples": [{"nodeId": int(r.node_id), "connections": int(r.total_degree or 0)} for r in rows]}
 
 
