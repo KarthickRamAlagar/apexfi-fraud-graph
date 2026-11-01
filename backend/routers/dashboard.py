@@ -8,6 +8,7 @@ from fastapi import APIRouter, HTTPException
 from sqlalchemy import text
 
 from backend.db import engine
+from etl.db.jsonutil import as_json
 from backend.services.fraud_predictor import get_predictor
 
 router = APIRouter(prefix="/api/dashboard", tags=["dashboard"])
@@ -25,7 +26,7 @@ def get_summary():
             404,
             "No precomputed summary found — run: uv run python -m backend.services.precompute_summaries",
         )
-    return row.payload
+    return as_json(row.payload)
 
 
 @router.get("/recent-transactions")

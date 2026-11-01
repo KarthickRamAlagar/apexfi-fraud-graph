@@ -1,0 +1,26 @@
+# Backend (Hugging Face Space, CPU). Versions match the project's uv.lock where it matters for the saved models.
+fastapi>=0.115
+uvicorn[standard]>=0.31
+pydantic>=2.9
+sqlalchemy>=2.0
+python-dotenv>=1.0
+requests>=2.32
+reportlab>=4.0
+openai>=1.50
+huggingface_hub>=0.25
+
+# data layer for the free deployment (Parquet queried in-process)
+duckdb>=1.1
+duckdb-engine>=0.13
+pytz
+pyarrow>=17.0
+
+# models
+numpy==2.3.5
+pandas==2.3.3
+scikit-learn==1.9.0
+lightgbm==4.7.0
+shap>=0.51
+networkx>=3.3
+torch==2.13.0
+torch-geometric==2.8.0.post1

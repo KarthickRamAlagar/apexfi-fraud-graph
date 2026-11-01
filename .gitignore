@@ -35,3 +35,6 @@ ml/checkpoints/
 # large exported CSVs (already uploaded to Kaggle, kept locally only)
 dgraph_fin_edges.csv
 dgraph_fin_nodes.csv
+
+# exported Parquet copy of the Gold layer (goes to Hugging Face, not git)
+data/gold_parquet/

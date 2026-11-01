@@ -13,8 +13,16 @@ Safety guards, in order:
      (fraud_readonly — see setup_readonly_role.py) that physically cannot
      write, even if steps 1-2 were somehow bypassed.
   4. A statement timeout and a hard row cap protect against runaway queries.
+  5. Blocked: file/system functions (read_*, glob, pg_*, duckdb_*, ...) so a
+     tricked model can't read server files; with DATA_BACKEND=duckdb the
+     engine is additionally locked to the Parquet folder (see etl/db/duck.py).
+  6. A global daily question cap (ASK_DAILY_CAP, default 500) keeps a public
+     demo from exhausting the free LLM quotas.
 """
+import os
 import re
+import threading
+import time
 
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, Field
@@ -67,7 +75,30 @@ Rules:
 FORBIDDEN_KEYWORDS = [
     "insert", "update", "delete", "drop", "alter", "create", "grant", "revoke",
     "truncate", "copy", "call", "do", "vacuum", "reindex",
+    "attach", "detach", "install", "load", "pragma", "set", "export", "import",
+    "checkpoint", "information_schema",
 ]
+# file / system access functions (DuckDB read_csv, read_text, glob, parquet_*, duckdb_* catalogs; Postgres pg_*)
+FORBIDDEN_PATTERNS = [r"\bread_\w+", r"\bglob\b", r"\bparquet_\w+", r"\bduckdb_\w+", r"\bpg_\w+",
+                      r"\bcurrent_setting\b", r"\bsql_auto_complete\b", r"\bquery_table\b", r"\bcsv_\w+"]
+
+DAILY_CAP = int(os.getenv("ASK_DAILY_CAP", "500"))  # 0 = unlimited
+_cap_lock = threading.Lock()
+_cap_state = {"day": None, "count": 0}
+
+
+def _take_daily_slot():
+    """Count one question against today's global budget. False when the budget is used up."""
+    if DAILY_CAP <= 0:
+        return True
+    today = time.strftime("%Y-%m-%d", time.gmtime())
+    with _cap_lock:
+        if _cap_state["day"] != today:
+            _cap_state.update(day=today, count=0)
+        if _cap_state["count"] >= DAILY_CAP:
+            return False
+        _cap_state["count"] += 1
+        return True
 
 LANGUAGE_NAMES = {
     "en-IN": "English",
@@ -109,6 +140,32 @@ def validate_sql(sql):
     for kw in FORBIDDEN_KEYWORDS:
         if re.search(rf"\b{kw}\b", lowered):
             raise ValueError(f"Query contains a forbidden keyword: {kw}")
+    for pattern in FORBIDDEN_PATTERNS:
+        if re.search(pattern, lowered):
+            raise ValueError("Query uses a function that is not allowed.")
+
+
+def run_readonly_query(engine, sql):
+    """Execute the validated SELECT with a hard row cap and a real timeout.
+    Postgres: SET statement_timeout. DuckDB (no such setting): interrupt the query from a timer."""
+    limited = f"SELECT * FROM ({sql.rstrip().rstrip(';')}) AS _ask LIMIT {MAX_ROWS}"
+    is_duck = engine.dialect.name == "duckdb"
+    with engine.connect() as conn:
+        timer = None
+        if is_duck:
+            raw = conn.connection.driver_connection
+            timer = threading.Timer(STATEMENT_TIMEOUT_MS / 1000, raw.interrupt)
+            timer.start()
+        else:
+            conn.execute(text(f"SET statement_timeout = {STATEMENT_TIMEOUT_MS}"))
+        try:
+            result = conn.execute(text(limited))
+            rows = result.fetchmany(MAX_ROWS)
+            columns = list(result.keys())
+        finally:
+            if timer:
+                timer.cancel()
+    return columns, rows
 
 
 @router.post("/")
@@ -116,6 +173,9 @@ def ask_question(req: AskRequest):
     # req.language still matters for the frontend's speech-recognition
     # (voice input in Tamil/Kannada/etc.), but the answer itself is
     # always written in English now — see note below on why.
+
+    if not _take_daily_slot():
+        raise HTTPException(429, "The daily limit for questions on this demo has been reached. Please try again tomorrow.")
 
     sql_prompt = f"Question: {req.question}\n\nWrite the PostgreSQL SELECT query to answer this."
     try:
@@ -134,11 +194,7 @@ def ask_question(req: AskRequest):
 
     engine = get_readonly_engine()
     try:
-        with engine.connect() as conn:
-            conn.execute(text(f"SET statement_timeout = {STATEMENT_TIMEOUT_MS}"))
-            result = conn.execute(text(sql))
-            rows = result.fetchmany(MAX_ROWS)
-            columns = list(result.keys())
+        columns, rows = run_readonly_query(engine, sql)
     except Exception as e:
         print(f"[ask] query execution failed: {e}")
         raise HTTPException(400, "The query could not be run. Please rephrase your question.")

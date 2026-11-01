@@ -1,0 +1,19 @@
+[Unit]
+Description=ApexFi API (FastAPI)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+User=__USER__
+WorkingDirectory=/opt/apexfi
+EnvironmentFile=/etc/apexfi.env
+# downloads models + data from the private Hugging Face repos if missing (fast no-op when already there)
+ExecStartPre=/opt/apexfi/.venv/bin/python -m deploy.fetch_assets
+ExecStart=/opt/apexfi/.venv/bin/uvicorn backend.main:app --host 127.0.0.1 --port 8000 --proxy-headers --forwarded-allow-ips=127.0.0.1
+Restart=always
+RestartSec=5
+TimeoutStartSec=1800
+LimitNOFILE=65535
+
+[Install]
+WantedBy=multi-user.target
