@@ -18,6 +18,7 @@ import ModelComparison from '@/pages/ModelComparison'
 import Economics from '@/pages/Economics'
 import About from '@/pages/About'
 import TourGuide from '@/components/TourGuide'
+import SdgLab from '@/pages/SdgLab'
 // Real Gold-layer data doesn't change between page visits within a
 // session (it's precomputed / refreshed only when you re-run the
 // precompute script), so a 5-minute staleTime avoids refetching every
@@ -68,7 +69,8 @@ export default function App() {
               <Route path="/model-comparison" element={<ModelComparison />} />
               <Route path="/economics" element={<Economics />} />
               <Route path="/about" element={<About />} />
-            </Routes>
+              <Route path="/sdg-lab" element={<SdgLab />} />
+</Routes>
           </div>
           <TourGuide />
         </BrowserRouter>
