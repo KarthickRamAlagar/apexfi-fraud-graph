@@ -565,16 +565,16 @@ export default function Dashboard() {
                     <Panel title="DGraph-Fin Model (V2 corrected)" icon={Cpu}>
             <div className="flex gap-6">
               <div>
-                <div className="font-mono text-xl font-semibold tabular-nums">78.4%</div>
+                <div className="font-mono text-xl font-semibold tabular-nums">77.8%</div>
                 <div className="text-xs text-muted-foreground">ROC-AUC</div>
               </div>
               <div>
-                <div className="font-mono text-xl font-semibold tabular-nums">4.1%</div>
+                <div className="font-mono text-xl font-semibold tabular-nums">3.8%</div>
                 <div className="text-xs text-muted-foreground">PR-AUC</div>
               </div>
             </div>
             <p className="mt-2 text-xs text-muted-foreground">
-              Corrected V2 result, <strong>without</strong> the node_timestamp column. The earlier 93.8% ROC-AUC came from that column, which exists only for fraud accounts (a label leak). DGraph-Fin is a known-hard benchmark. <Link to="/v2-evaluation" className="text-primary hover:underline">See the evidence</Link>.
+              Corrected V2 result (retrained LightGBM + GraphSAGE stack), <strong>without</strong> the node_timestamp column. The earlier 93.8% ROC-AUC came from that column, which exists only for fraud accounts (a label leak). DGraph-Fin is a known-hard benchmark. <Link to="/v2-evaluation" className="text-primary hover:underline">See the evidence</Link>.
             </p>
           </Panel>
           {summary.model_validation.ethereum?.trained && (

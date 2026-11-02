@@ -184,6 +184,22 @@ function Dgraph({ s }) {
         <div className="text-sm font-semibold">Correction: the earlier DGraph-Fin result (ROC-AUC 0.938) was a label leak</div>
         <p className="mt-1 text-xs text-muted-foreground">{d.note}</p>
       </div>
+      {d.retrained && (
+        <Panel title="Retrained app model (LightGBM + GraphSAGE + stacking, no node_timestamp)" icon={ShieldAlert}>
+          <Table head={['Model', 'ROC-AUC', 'PR-AUC']} rows={[
+            ['LightGBM (3 seeds)', f(d.retrained.lightgbm.roc_auc), f(d.retrained.lightgbm.pr_auc, 4)],
+            ['GraphSAGE (one run)', f(d.retrained.graphsage.roc_auc), f(d.retrained.graphsage.pr_auc, 4)],
+            ['Stacked (used by the app)', f(d.retrained.stacked.roc_auc), f(d.retrained.stacked.pr_auc, 4)],
+            ['Old leaky model (invalid)', f(d.retrained.old_leaky.roc_auc), f(d.retrained.old_leaky.pr_auc, 4)],
+          ]} />
+          <Note>{d.retrained.split}. Fraud is {d.retrained.base_rate_pct}% of accounts, so a score of 0.04 PR-AUC is about 3 times random. GraphSAGE beats LightGBM alone, so graph structure adds a small real signal here. LightGBM was re-fitted with 3 seeds; one GraphSAGE checkpoint was reused.</Note>
+          <div className="mt-3 text-xs font-medium">Operating point (F1-optimal on validation, threshold {f(d.retrained.operating_point.threshold, 3)})</div>
+          <Table className="mt-1" head={['Precision', 'Recall', 'F1', 'Accounts flagged', 'Lift top 1%', 'Lift top 5%']} rows={[[
+            f(d.retrained.operating_point.test.precision, 3), f(d.retrained.operating_point.test.recall, 3), f(d.retrained.operating_point.test.f1, 3), pct(d.retrained.operating_point.test.flagged_pct),
+            f(d.retrained.operating_point.test.lift_top1, 1), f(d.retrained.operating_point.test.lift_top5, 1)]]} />
+          <Note>{d.retrained.operating_point.note}</Note>
+        </Panel>
+      )}
       <Panel title="Leak shown by ablation (random 70/15/15 split)" icon={ShieldAlert}>
         <Table head={['Features', 'ROC-AUC', 'PR-AUC', 'Precision@0.5', 'Recall@0.5']} rows={[
           ['V1 exact (with node_timestamp)', ...['roc_auc', 'pr_auc', 'precision', 'recall'].map((k) => f(a.V1_exact_all19[k]))],
