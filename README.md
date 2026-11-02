@@ -334,3 +334,9 @@ independent confirmations of this same real pattern.**
 ---
 uv run streamlit run Home.py
 uv run uvicorn backend.main:app --reload
+
+## Correction (V2): DGraph-Fin results
+
+The DGraph-Fin figures in the table above (ROC-AUC 0.938, F1 0.687, precision about 0.99) were produced with the `node_timestamp`
+feature, which exists only for fraud accounts, so it leaked the label. Without it, V2 measures ROC-AUC 0.71 to 0.78 and PR-AUC 0.03 to 0.04
+(see `docs/V2_EVALUATION.md` and the V2 Evaluation page). Treat the old DGraph-Fin numbers as invalid. The IEEE-CIS results are not affected.

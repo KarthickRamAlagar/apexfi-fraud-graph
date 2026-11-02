@@ -35,6 +35,7 @@ from backend.routers import (
 
 _prod = is_production()
 from backend.routers import sdg_v2
+from backend.routers import v2_eval
 app = FastAPI(
     title="ApexFi API",
     docs_url=None if _prod else "/docs",
@@ -57,6 +58,7 @@ app.include_router(ethereum_fraud.router)
 app.include_router(temporal_validation.router)
 app.include_router(compare.router)
 app.include_router(sdg_v2.router)
+app.include_router(v2_eval.router)
 
 
 @app.on_event("startup")
