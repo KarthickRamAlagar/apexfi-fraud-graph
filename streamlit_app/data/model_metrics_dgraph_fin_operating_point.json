@@ -1,0 +1,17 @@
+{
+  "threshold": 0.02928689404198182,
+  "rule": "F1-optimal on the validation block",
+  "test": {
+    "precision": 0.04259911393843008,
+    "recall": 0.32230339492909327,
+    "f1": 0.07525209451663072,
+    "roc_auc": 0.7782724216996214,
+    "pr_auc": 0.03769210205801208,
+    "flagged_pct": 9.576753825316441,
+    "lift_top1": 4.599220813714951,
+    "recall_top1": 0.04598195100988397,
+    "lift_top5": 3.7731189337863347,
+    "recall_top5": 0.18865492049849591
+  },
+  "note": "Weak by design of the data: published methods also score PR-AUC of only a few percent on DGraph-Fin. Use scores for ranking, not for automatic decisions."
+}

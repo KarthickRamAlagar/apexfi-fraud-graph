@@ -126,7 +126,7 @@ export default function About() {
                     <thead><tr className="text-left text-muted-foreground"><th className="py-1.5 font-normal">Model / setting</th><th className="font-normal">Split</th><th className="font-normal">F1</th><th className="font-normal">ROC-AUC</th></tr></thead>
                     <tbody className="font-mono">
                       <Row a="Stacked LightGBM + GraphSAGE (IEEE-CIS)" b="Random, 3-seed" c="0.798" d="0.974" />
-                      <Row a="DGraph-Fin, V2 corrected (no node_timestamp)" b="Random" c="n/a (PR-AUC 0.041)" d="0.784" />
+                      <Row a="DGraph-Fin, V2 corrected (no node_timestamp)" b="Random" c="n/a (PR-AUC 0.038)" d="0.778" />
                       <Row a="LightGBM, 4 features" b="Random" c="0.218" d="0.846" />
                       <Row a="Time-series LightGBM (rolling features)" b="Chronological" c="0.234 @ 0.6" d="0.790" />
                     </tbody>

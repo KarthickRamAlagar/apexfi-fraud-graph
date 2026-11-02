@@ -61,7 +61,7 @@ class DGraphFinPredictor:
         with engine.connect() as conn:
             cols = conn.execute(text("SELECT * FROM gold.dgraph_fin_nodes LIMIT 0")).keys()
         x_cols = [c for c in cols if c.startswith("x")]
-        return x_cols + ["total_degree", "node_timestamp"]
+        return x_cols + ["total_degree"]  # node_timestamp removed: it leaked the label (V2 audit)
 
     def _gnn_probability(self, idx):
         seed_mask = torch.zeros(self.data.num_nodes, dtype=torch.bool)
@@ -90,7 +90,15 @@ class DGraphFinPredictor:
             for i in order
         ]
 
-    def predict(self, node_id: int, threshold: float = 0.5):
+    def _default_threshold(self):
+        # F1-optimal threshold chosen on the validation block (ml/dgraph_fin_threshold.py); 0.5 would flag nothing on this hard dataset
+        import json, os
+        p = "ml/checkpoints/dgraph_fin_threshold.json"
+        return float(json.load(open(p))["threshold"]) if os.path.exists(p) else 0.5
+
+    def predict(self, node_id: int, threshold: float = None):
+        if threshold is None:
+            threshold = self._default_threshold()
         idx = self.id_to_idx.get(node_id)
         if idx is None:
             return None
@@ -102,7 +110,7 @@ class DGraphFinPredictor:
         gnn_prob = self._gnn_probability(idx)
         stacked_prob = float(self.stacking_meta.predict_proba([[lgbm_prob, gnn_prob]])[0, 1])
 
-        real_degree = int(self.data.x[idx, -2].item())  # total_degree, real feature at this fixed position
+        real_degree = int(self.data.x[idx, -1].item())  # total_degree is the last feature (node_timestamp removed)
 
         return {
             "nodeId": node_id,
@@ -118,6 +126,7 @@ class DGraphFinPredictor:
             "realConnectionCount": real_degree,
             "modelInfo": {
                 "type": "Stacked: LightGBM + GraphSAGE GNN (logistic combination)",
+                "evaluation": "Corrected V2 model (no node_timestamp): ROC-AUC about 0.78, PR-AUC about 0.04 on held-out accounts. A hard dataset: use the score to rank accounts for review, not to decide automatically.",
                 "note": (
                     "Real inference on a real, existing account in the DGraph-Fin network — "
                     "using its actual features and actual real connections, not a reconstruction. "

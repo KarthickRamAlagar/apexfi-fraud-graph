@@ -6,46 +6,46 @@
   ],
   "lightgbm": {
     "precision": {
-      "mean": 0.9919,
-      "std": 0.0086
+      "mean": 0.0881,
+      "std": 0.0267
     },
     "recall": {
-      "mean": 0.5241,
-      "std": 0.0002
+      "mean": 0.0019,
+      "std": 0.0004
     },
     "f1": {
-      "mean": 0.6859,
-      "std": 0.002
+      "mean": 0.0036,
+      "std": 0.0008
     },
     "roc_auc": {
-      "mean": 0.9376,
+      "mean": 0.7608,
       "std": 0.0004
     },
     "pr_auc": {
-      "mean": 0.5851,
+      "mean": 0.0331,
       "std": 0.0002
     }
   },
   "stacked": {
     "precision": {
-      "mean": 0.9954,
-      "std": 0.0054
+      "mean": 0.0,
+      "std": 0.0
     },
     "recall": {
-      "mean": 0.5243,
+      "mean": 0.0,
       "std": 0.0
     },
     "f1": {
-      "mean": 0.6868,
-      "std": 0.0013
+      "mean": 0.0,
+      "std": 0.0
     },
     "roc_auc": {
-      "mean": 0.9375,
-      "std": 0.0006
+      "mean": 0.778,
+      "std": 0.0002
     },
     "pr_auc": {
-      "mean": 0.5937,
-      "std": 0.0013
+      "mean": 0.0379,
+      "std": 0.0002
     }
   },
   "note": "GNN reused a single validated checkpoint across all seeds. LightGBM's own training randomness varied per seed; train/val/test split held fixed."

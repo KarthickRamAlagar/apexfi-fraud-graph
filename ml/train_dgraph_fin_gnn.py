@@ -27,6 +27,7 @@ def main():
     train_gnn(
         data, dataset_key="dgraph_fin", dataset_label="DGraph-Fin Users",
         weight_dampening=0.5,  # applied from the start — IEEE-CIS showed full inverse-frequency overcorrects
+        normalize=False,  # DGraph-Fin stacking and inference use RAW features, so training must too (they must match)
     )
 
 

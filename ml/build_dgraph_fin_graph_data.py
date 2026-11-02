@@ -50,12 +50,13 @@ def main():
     x_features = df[feature_cols].fillna(0).values
 
     total_degree = df["total_degree"].fillna(0).values.reshape(-1, 1)
-    node_timestamp = df["node_timestamp"].fillna(0).values.reshape(-1, 1)  # real, sparse-on-purpose
+    # node_timestamp is deliberately NOT used as a feature: it exists only for fraud accounts, so it leaks the label
+    # (V2 ablation: ROC-AUC 0.93 with it, 0.73 without). It stays in the Gold table for reference only.
 
     x = torch.tensor(
-        np.concatenate([x_features, total_degree, node_timestamp], axis=1), dtype=torch.float
+        np.concatenate([x_features, total_degree], axis=1), dtype=torch.float
     )
-    print(f"  Final feature matrix: {x.shape[1]} columns ({len(feature_cols)} x-features + degree + timestamp)")
+    print(f"  Final feature matrix: {x.shape[1]} columns ({len(feature_cols)} x-features + degree; node_timestamp excluded on purpose)")
 
     print("\nLoading edges from gold.dgraph_fin_edges...")
     print("  (4.3M rows — progress prints as it goes so it doesn't look hung)")

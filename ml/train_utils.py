@@ -36,6 +36,7 @@ def train_gnn(
     lr=0.005,
     patience=3,
     weight_dampening=1.0,
+    normalize=True,
 ):
     """weight_dampening: 1.0 = full inverse-frequency class weight (what the
     first pass used — it overcorrected, pushing the model to over-predict
@@ -48,7 +49,8 @@ def train_gnn(
 
     device = torch.device("cpu")  # confirmed CPU-only hardware — no CUDA/ROCm available
     data = data.to(device)
-    data = normalize_features(data)  # critical for GNN stability — see data_utils.py docstring
+    if normalize:
+        data = normalize_features(data)  # critical for GNN stability on IEEE-CIS — see data_utils.py docstring
 
     # built ONCE and shared — this is the expensive part (sorting 34M+
     # edges); the original design had each of the 3 loaders below rebuild
