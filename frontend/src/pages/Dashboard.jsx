@@ -544,7 +544,7 @@ export default function Dashboard() {
       {summary.model_status === 'trained_and_validated' && summary.model_validation && (
         <motion.div className="grid grid-cols-1 gap-4 md:grid-cols-3" variants={fadeUp} initial="hidden" animate="show" custom={2.5}>
           {Object.entries(summary.model_validation)
-            .filter(([key]) => key !== 'ethereum')
+            .filter(([key]) => key !== 'ethereum' && key !== 'dgraph_fin')
             .map(([key, v]) => (
             <Panel key={key} title={key === 'ieee_cis' ? 'IEEE-CIS Model (random split)' : 'DGraph-Fin Model (random split)'} icon={Cpu}>
               <div className="flex gap-6">
@@ -562,6 +562,21 @@ export default function Dashboard() {
               <p className="mt-2 text-xs text-muted-foreground">Real, {v.seeds_validated}-seed validated — stacked LightGBM + GNN, <strong>random split</strong>. Chronological (time-aware) results are on the Temporal Validation page.</p>
             </Panel>
           ))}
+                    <Panel title="DGraph-Fin Model (V2 corrected)" icon={Cpu}>
+            <div className="flex gap-6">
+              <div>
+                <div className="font-mono text-xl font-semibold tabular-nums">78.4%</div>
+                <div className="text-xs text-muted-foreground">ROC-AUC</div>
+              </div>
+              <div>
+                <div className="font-mono text-xl font-semibold tabular-nums">4.1%</div>
+                <div className="text-xs text-muted-foreground">PR-AUC</div>
+              </div>
+            </div>
+            <p className="mt-2 text-xs text-muted-foreground">
+              Corrected V2 result, <strong>without</strong> the node_timestamp column. The earlier 93.8% ROC-AUC came from that column, which exists only for fraud accounts (a label leak). DGraph-Fin is a known-hard benchmark. <Link to="/v2-evaluation" className="text-primary hover:underline">See the evidence</Link>.
+            </p>
+          </Panel>
           {summary.model_validation.ethereum?.trained && (
             <Panel title="Ethereum Model (validated)" icon={Link2}>
               <div className="flex gap-6">

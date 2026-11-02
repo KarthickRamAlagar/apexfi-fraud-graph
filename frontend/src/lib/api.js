@@ -50,4 +50,7 @@ temporalFullReport: () => fetchJson('/api/temporal-validation/full-report'),
   sdgEngineMeta: () => fetchJson('/api/sdg/engine/meta'),
   sdgEngineReplay: (payload) => fetchJson('/api/sdg/engine/replay', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) }),
   sdgEnginePayload: (payload) => fetchJson('/api/sdg/engine/payload', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) }),
+  v2Summary: () => fetchJson('/api/v2/summary'),
+  v2Score: (tid) => fetchJson(`/api/v2/score/${tid}`),
+  v2Examples: (n = 3) => fetchJson(`/api/v2/examples?n=${n}`),
 }
