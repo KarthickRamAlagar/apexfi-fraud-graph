@@ -1,8 +1,7 @@
 import './GovEmblem.css'
 
-// India's actual State Emblem (Lion Capital of Ashoka) — the user's own
-// reference photo, background-removed, original color preserved. Not a
-// depiction of any person.
+// ApexFi brand mark (placeholder logo -- drop your own transparent PNG at
+// public/images/apexfi-logo.png to replace it). Component name kept so imports don't change.
 export default function GovEmblem({ state = 'idle' }) {
   return (
     <div className={`gov-emblem gov-emblem-${state}`}>
@@ -11,8 +10,8 @@ export default function GovEmblem({ state = 'idle' }) {
 
       <div className="gov-emblem-stage">
         <img
-          src="/images/ashoka-lion-capital.png"
-          alt="Lion Capital of Ashoka"
+          src="/images/apexfi-logo.png"
+          alt="ApexFi logo"
           className="gov-emblem-image"
         />
       </div>

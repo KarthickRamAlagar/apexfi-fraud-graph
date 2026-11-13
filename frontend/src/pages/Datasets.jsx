@@ -9,6 +9,7 @@ import PendingBanner from '@/components/PendingBanner'
 import { DatasetsSkeleton } from '@/components/PageSkeletons'
 import { api } from '@/lib/api'
 import { cn } from '@/lib/utils'
+import LoadingOverlay from '@/components/LoadingOverlay'
 
 const CATEGORIES = ['All', 'Tabular', 'Graph']
 
@@ -33,10 +34,9 @@ export default function Datasets() {
     )
   }
 
-  if (!datasets) {
-    return <DatasetsSkeleton />
-  }
-
+if (!datasets) {
+    return <LoadingOverlay><DatasetsSkeleton /></LoadingOverlay>
+}
   const filtered = datasets.filter((ds) => {
     const matchesCategory = activeCategory === 'All' || ds.category === activeCategory
     const matchesQuery = ds.name.toLowerCase().includes(query.toLowerCase())

@@ -1,0 +1,22 @@
+{
+  "accuracy": 0.9863,
+  "precision": 0.0583,
+  "recall": 0.0056,
+  "f1": 0.0102,
+  "roc_auc": 0.774,
+  "pr_auc": 0.0372,
+  "confusion_matrix": [
+    [
+      181304,
+      210
+    ],
+    [
+      2314,
+      13
+    ]
+  ],
+  "dataset": "DGraph-Fin Users",
+  "trained_at": "2026-11-01 17:47 UTC",
+  "epochs_trained": 4,
+  "web_app_url": "http://localhost:5173/investigate"
+}

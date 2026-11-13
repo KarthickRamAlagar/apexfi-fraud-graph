@@ -11,6 +11,7 @@ import PendingBanner from '@/components/PendingBanner'
 import FraudHeatmap from '@/components/FraudHeatmap'
 import { AnalyticsSkeleton } from '@/components/PageSkeletons'
 import { api } from '@/lib/api'
+import LoadingOverlay from '@/components/LoadingOverlay'
 
 const chartTooltip = {
   contentStyle: {
@@ -51,18 +52,17 @@ export default function Analytics() {
       </div>
     )
   }
-
-  if (!data) {
-    return <AnalyticsSkeleton />
-  }
+if (!data) {
+    return <LoadingOverlay><AnalyticsSkeleton /></LoadingOverlay>
+}
 
   const { kpis, fraudTrend, heatmap, edgeLift, rbiOverlay, rbiOverlayNote, degreeByLabel } = data
 
   return (
-    <div className="container space-y-6 py-8">
+    <div className="container py-8 space-y-6">
       <div>
-        <p className="text-xs uppercase tracking-wide text-muted-foreground">ApexFi / Analytics</p>
-        <h1 className="mt-1 font-display text-2xl font-semibold">Analytics</h1>
+        <p className="text-xs tracking-wide uppercase text-muted-foreground">ApexFi / Analytics</p>
+        <h1 className="mt-1 text-2xl font-semibold font-display">Analytics</h1>
         <p className="mt-1 text-sm text-muted-foreground">
           Every panel below is precomputed from real Gold-layer SQL aggregates — not mock data.
         </p>
@@ -71,19 +71,19 @@ export default function Analytics() {
       <motion.div className="grid grid-cols-1 gap-4 sm:grid-cols-3" variants={fadeUp} initial="hidden" animate="show">
         <Panel>
           <div className="text-xs text-muted-foreground">Overall Fraud Rate</div>
-          <div className="mt-1 font-display text-2xl font-semibold tabular-nums text-risk-high">
+          <div className="mt-1 text-2xl font-semibold font-display tabular-nums text-risk-high">
             {kpis.overallFraudRate}%
           </div>
         </Panel>
         <Panel>
           <div className="text-xs text-muted-foreground">Total Flagged</div>
-          <div className="mt-1 font-display text-2xl font-semibold tabular-nums">
+          <div className="mt-1 text-2xl font-semibold font-display tabular-nums">
             {kpis.totalFlagged.toLocaleString()}
           </div>
         </Panel>
         <Panel>
           <div className="text-xs text-muted-foreground">Best Edge Lift</div>
-          <div className="mt-1 font-display text-2xl font-semibold tabular-nums text-primary">
+          <div className="mt-1 text-2xl font-semibold font-display tabular-nums text-primary">
             {kpis.bestEdgeLift}x
           </div>
         </Panel>
@@ -166,11 +166,11 @@ export default function Analytics() {
               <div className="grid grid-cols-2 gap-3">
                 {rbiOverlay.map((r) => (
                   <Fragment key={r.fiscalYear}>
-                    <div className="rounded-lg bg-secondary/40 p-3 text-center">
+                    <div className="p-3 text-center rounded-lg bg-secondary/40">
                       <div className="text-[10px] uppercase text-muted-foreground">{r.fiscalYear} Fraud Rate</div>
                       <div className="mt-1 font-mono text-2xl font-semibold text-risk-high">{r.fraudRate}%</div>
                     </div>
-                    <div className="rounded-lg bg-secondary/40 p-3 text-center">
+                    <div className="p-3 text-center rounded-lg bg-secondary/40">
                       <div className="text-[10px] uppercase text-muted-foreground">{r.fiscalYear} RBI Bank Rate</div>
                       <div className="mt-1 font-mono text-2xl font-semibold text-primary">{r.bankRate}%</div>
                     </div>

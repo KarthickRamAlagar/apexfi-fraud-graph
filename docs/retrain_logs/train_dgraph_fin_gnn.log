@@ -1,0 +1,12 @@
+Loading graph from dgraph_fin_graph.pt...
+  3,700,550 nodes, 8,601,998 edges, 18 features
+Class weights (train set): normal=1.0, fraud=8.83 (full inverse-frequency would be 78.03, dampening=0.5)
+Epoch 1/5 - loss 0.3027 - val F1 0.0086 - val ROC-AUC 0.7776 - 68.6s
+Epoch 2/5 - loss 0.2889 - val F1 0.0008 - val ROC-AUC 0.7749 - 70.5s
+Epoch 3/5 - loss 0.2872 - val F1 0.0017 - val ROC-AUC 0.7803 - 72.0s
+Epoch 4/5 - loss 0.2869 - val F1 0.0067 - val ROC-AUC 0.7807 - 69.6s
+No val improvement for 3 epochs - stopping early.
+
+Final test metrics: {'accuracy': 0.9863, 'precision': 0.0583, 'recall': 0.0056, 'f1': 0.0102, 'roc_auc': 0.774, 'pr_auc': 0.0372, 'confusion_matrix': [[181304, 210], [2314, 13]]}
+Saved model checkpoint to /home/claude/dgretrain/ml/checkpoints/dgraph_fin_model.pt
+Saved metrics to /home/claude/dgretrain/ml/../streamlit_app/data/model_metrics_dgraph_fin.json

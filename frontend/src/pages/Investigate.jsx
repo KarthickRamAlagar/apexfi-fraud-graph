@@ -11,6 +11,8 @@ import { InvestigateSkeleton } from '@/components/PageSkeletons'
 import { Skeleton } from '@/components/ui/skeleton'
 import { api } from '@/lib/api'
 import { cn } from '@/lib/utils'
+import LoadingOverlay from '@/components/LoadingOverlay'
+import ModelComparePanel from '@/components/ModelComparePanel'
 
 export default function Investigate() {
   const [searchParams] = useSearchParams()
@@ -62,9 +64,9 @@ export default function Investigate() {
     )
   }
 
-  if (samples.length === 0 && !error) {
-    return <InvestigateSkeleton />
-  }
+if (samples.length === 0 && !error) {
+    return <LoadingOverlay><InvestigateSkeleton /></LoadingOverlay>
+}
 
   return (
     <div className="container py-8 space-y-6">
@@ -132,37 +134,43 @@ export default function Investigate() {
         </div>
       )}
 
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-[1fr_340px]">
-        <Panel title="Connected Network" icon={Share2}>
-          {loading || !investigation ? (
-            <Skeleton className="h-[420px] rounded-lg" />
-          ) : (
-            <AnimatePresence mode="wait">
-              <motion.div
-                key={centerId}
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                transition={{ duration: 0.2 }}
-              >
-                {investigation.neighbors.length > 0 ? (
-                  <TransactionGraph
-                    center={investigation.center}
-                    neighbors={investigation.neighbors}
-                    onSelectNode={setCenterId}
-                  />
-                ) : (
-                  <div className="py-16 text-sm text-center text-muted-foreground">
-                    This transaction has no device_shared or card_shared connections in the graph.
-                  </div>
-                )}
-              </motion.div>
-            </AnimatePresence>
+      <div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-[1fr_340px]">
+        <div className="space-y-6">
+          {(loading || !investigation || investigation.neighbors.length > 0) && (
+            <Panel title="Connected Network" icon={Share2}>
+              {loading || !investigation ? (
+                <Skeleton className="h-[420px] rounded-lg" />
+              ) : (
+                <AnimatePresence mode="wait">
+                  <motion.div
+                    key={centerId}
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    transition={{ duration: 0.2 }}
+                  >
+                    <TransactionGraph
+                      center={investigation.center}
+                      neighbors={investigation.neighbors}
+                      onSelectNode={setCenterId}
+                    />
+                  </motion.div>
+                </AnimatePresence>
+              )}
+              <p className="mt-3 text-xs text-center text-muted-foreground">
+                Click any connected node to re-center the graph on it.
+              </p>
+            </Panel>
           )}
-          <p className="mt-3 text-xs text-center text-muted-foreground">
-            Click any connected node to re-center the graph on it.
-          </p>
-        </Panel>
+
+          {investigation && investigation.neighbors.length === 0 && (
+            <p className="text-xs text-muted-foreground">
+              This transaction has no device_shared or card_shared connections in the graph, so there is no network to draw.
+            </p>
+          )}
+
+          {investigation && <ModelComparePanel kind="investigate" transactionId={activeId} wide />}
+        </div>
 
         <div className="space-y-4">
           <Panel title="Transaction Details">
@@ -172,7 +180,7 @@ export default function Investigate() {
               <Row label="Product" value={investigation?.center.productCD} loading={loading || !investigation} />
               <Row label="Card" value={investigation?.center.card} mono loading={loading || !investigation} />
               <Row label="Device" value={investigation?.center.device} mono loading={loading || !investigation} />
-              <Row label="Date" value={investigation?.center.date} mono loading={loading || !investigation} />
+              <Row label="Date" value={investigation?.center.date?.slice(0, 10)} mono loading={loading || !investigation} />
             </dl>
           </Panel>
 
@@ -216,6 +224,7 @@ export default function Investigate() {
               <PendingBanner>{investigation.riskAssessment.note}</PendingBanner>
             )}
           </Panel>
+
         </div>
       </div>
     </div>

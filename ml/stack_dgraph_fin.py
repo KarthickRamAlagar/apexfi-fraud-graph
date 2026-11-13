@@ -108,9 +108,9 @@ def main():
         pickle.dump(meta, f)
     print("\nSaved stacking meta-model to ml/checkpoints/dgraph_fin_stacking_meta.pkl")
 
-    with open("streamlit_app/data/model_metrics_dgraph_fin_stacked.json", "w") as f:
+    with open("app_data/model_metrics_dgraph_fin_stacked.json", "w") as f:
         json.dump(metrics, f, indent=2)
-    print("Saved metrics to streamlit_app/data/model_metrics_dgraph_fin_stacked.json")
+    print("Saved metrics to app_data/model_metrics_dgraph_fin_stacked.json")
 
 
 if __name__ == "__main__":

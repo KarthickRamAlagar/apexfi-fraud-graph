@@ -211,7 +211,7 @@ class NewTransactionGraphScorer:
                 continue
             neighbors.append({
                 "id": f"TX-{tid}",
-                "amount": f"₹{row['transactionamt']:,.2f}",
+                "amount": f"${row['transactionamt']:,.2f}",
                 "isFlagged": bool(row["is_fraud"]),
                 "edgeType": "device_shared" if tid in device_id_set else "card_shared",
             })

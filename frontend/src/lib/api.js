@@ -1,4 +1,4 @@
-const API_BASE = 'http://localhost:8000'
+const API_BASE = import.meta.env.VITE_API_BASE || 'http://localhost:8000'
 
 async function fetchJson(path, options) {
   const res = await fetch(`${API_BASE}${path}`, options)
@@ -39,4 +39,18 @@ export const api = {
 ethereumFraudSamples: () => fetchJson('/api/ethereum-fraud/samples'),
 ethereumFraudSearch: (q) => fetchJson(`/api/ethereum-fraud/search?q=${encodeURIComponent(q)}`),
 ethereumFraudScore: (address) => fetchJson(`/api/ethereum-fraud/score/${address}`),
+temporalResults: () => fetchJson('/api/temporal-validation/results'),
+temporalScore: (payload) => fetchJson('/api/temporal-validation/score', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify(payload),
+}),
+temporalFullReport: () => fetchJson('/api/temporal-validation/full-report'),
+  sdgManual: (payload) => fetchJson('/api/sdg/manual', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) }),
+  sdgEngineMeta: () => fetchJson('/api/sdg/engine/meta'),
+  sdgEngineReplay: (payload) => fetchJson('/api/sdg/engine/replay', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) }),
+  sdgEnginePayload: (payload) => fetchJson('/api/sdg/engine/payload', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) }),
+  v2Summary: () => fetchJson('/api/v2/summary'),
+  v2Score: (tid) => fetchJson(`/api/v2/score/${tid}`),
+  v2Examples: (n = 3) => fetchJson(`/api/v2/examples?n=${n}`),
 }

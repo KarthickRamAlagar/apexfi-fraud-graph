@@ -1,0 +1,27 @@
+{
+  "results": {
+    "lightgbm_alone": {
+      "precision": 0.1176,
+      "recall": 0.6053,
+      "f1": 0.197,
+      "roc_auc": 0.7898
+    },
+    "graphsage_alone": {
+      "precision": 0.215,
+      "recall": 0.0761,
+      "f1": 0.1124,
+      "roc_auc": 0.7069
+    },
+    "hybrid_stacked": {
+      "precision": 0.25,
+      "recall": 0.0031,
+      "f1": 0.0062,
+      "roc_auc": 0.7855
+    }
+  },
+  "stacking_weights": {
+    "lightgbm": 7.661647573668847,
+    "graphsage": -1.8459728374433928
+  },
+  "note": "Real, honest 3-way comparison on the temporal/chronological split -- LightGBM alone, GraphSAGE alone, and the hybrid stacked combination. Completes the temporal research thread's ablation between tabular-only, graph-only, and combined approaches."
+}

@@ -118,13 +118,13 @@ def main():
     lgbm_summary = summarize(lgbm_results, "LightGBM alone")
     stacked_summary = summarize(stacked_results, "Stacked")
 
-    with open("streamlit_app/data/multiseed_ieee_cis.json", "w") as f:
+    with open("app_data/multiseed_ieee_cis.json", "w") as f:
         json.dump(
             {"seeds": SEEDS, "lightgbm": lgbm_summary, "stacked": stacked_summary,
              "note": "GNN reused a single validated checkpoint across all seeds (not retrained per-seed), given GNN training's memory fragility on available hardware. LightGBM's own training randomness varied per seed; train/val/test split held fixed."},
             f, indent=2,
         )
-    print("\nSaved to streamlit_app/data/multiseed_ieee_cis.json")
+    print("\nSaved to app_data/multiseed_ieee_cis.json")
 
 
 if __name__ == "__main__":
