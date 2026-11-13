@@ -3,8 +3,8 @@
 M.Tech project — a hybrid fraud-detection system combining tabular gradient
 boosting (LightGBM) with a Graph Neural Network (GraphSAGE), stacked
 together and made explainable with SHAP and real graph context. Built
-around a full data engineering pipeline, a FastAPI + React web app, and a
-Streamlit deep-EDA app.
+around a full data engineering pipeline, a FastAPI + React web app
+(dashboard, deep profiling, raw data browser, model evaluation, ops).
 
 **Framing note:** actual large-scale UPI/IMPS transaction data isn't
 publicly available, so this project uses two real-world proxy datasets —
@@ -162,8 +162,8 @@ DGraph-Fin's real timestamp field (`node_timestamp`) is genuinely
 the full dataset. A clean, honest chronological split isn't possible on
 this data without fabricating timestamps or dropping most of the dataset.
 This is a **deliberate, documented scoping decision** — a real, honest
-limitation of the available data, not an oversight. (See the Streamlit
-app's Temporal Validation page for the same note, alongside the real
+limitation of the available data, not an oversight. (See the
+Temporal Validation page for the same note, alongside the real
 results.)
 
 ---
@@ -191,11 +191,8 @@ upi-fraud-gnn/
 │   └── db/                      # connection.py, schema.sql
 ├── eda/                          # exploratory analysis scripts + notebooks
 ├── docs/                          # progress report, leakage/reproducibility audit, reports/
-├── streamlit_app/                 # standalone deep-EDA app (Streamlit Community Cloud)
-│   ├── pages/                       # Full Profiling, Raw Data Browser, Model Evaluation,
-│   │                                  # Temporal Validation
-│   └── data/                          # precomputed snapshots (parquet/json), regenerate via
-│                                        # backend.services.export_snapshot when missing
+├── app_data/                      # precomputed snapshots (parquet/json) the app reads; regenerate via
+│                                    # backend.services.export_snapshot when missing
 ├── backend/                             # FastAPI app
 │   ├── routers/                           # dashboard, datasets, eda, analytics, investigate,
 │   │                                        # ask, new_transaction, dgraph_fin_score,
@@ -273,13 +270,6 @@ npm install
 npm run dev
 ```
 
-### Run the Streamlit deep-EDA app
-
-```bash
-cd streamlit_app
-uv run streamlit run Home.py
-```
-
 ---
 
 ## Real, validated results
@@ -332,7 +322,6 @@ assumed risk. **See the Temporal Validation section for two further,
 independent confirmations of this same real pattern.**
 
 ---
-uv run streamlit run Home.py
 uv run uvicorn backend.main:app --reload
 
 ## Correction (V2): DGraph-Fin results

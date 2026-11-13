@@ -20,7 +20,7 @@ from sklearn.metrics import (
 
 GRAPH_PATH = "ieee_cis_graph.pt"
 EMBEDDINGS_PATH = "ml/checkpoints/ieee_cis_embeddings.pt"
-METRICS_DIR = os.path.join(os.path.dirname(__file__), "..", "streamlit_app", "data")
+METRICS_DIR = os.path.join(os.path.dirname(__file__), "..", "app_data")
 
 
 def compute_metrics(labels, preds, probs):

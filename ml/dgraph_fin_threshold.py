@@ -1,6 +1,6 @@
 """Pick an operating threshold for the DGraph-Fin stacked model on the VALIDATION block (F1-optimal), then report the TEST block at it.
 At the default 0.5 the corrected model flags nothing, because fraud is only 1.27% of accounts and the scores are low and compressed.
-Writes ml/checkpoints/dgraph_fin_threshold.json and streamlit_app/data/model_metrics_dgraph_fin_operating_point.json.
+Writes ml/checkpoints/dgraph_fin_threshold.json and app_data/model_metrics_dgraph_fin_operating_point.json.
 Run after stack_dgraph_fin:  uv run python -m ml.dgraph_fin_threshold"""
 import json, pickle
 import lightgbm as lgb, numpy as np, torch
@@ -33,7 +33,7 @@ def main():
         lift_top1=lift(yt, pt, .01)[0], recall_top1=lift(yt, pt, .01)[1], lift_top5=lift(yt, pt, .05)[0], recall_top5=lift(yt, pt, .05)[1]),
         note="Weak by design of the data: published methods also score PR-AUC of only a few percent on DGraph-Fin. Use scores for ranking, not for automatic decisions.")
     json.dump({"threshold": thr}, open("ml/checkpoints/dgraph_fin_threshold.json", "w"))
-    json.dump(out, open("streamlit_app/data/model_metrics_dgraph_fin_operating_point.json", "w"), indent=2); print(json.dumps(out, indent=2))
+    json.dump(out, open("app_data/model_metrics_dgraph_fin_operating_point.json", "w"), indent=2); print(json.dumps(out, indent=2))
 
 if __name__ == "__main__":
     main()

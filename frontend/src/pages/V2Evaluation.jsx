@@ -4,6 +4,8 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContaine
 import { FlaskConical, Trophy, Table2, SlidersHorizontal, Scale, ShieldAlert, Search } from 'lucide-react'
 import { Panel } from '@/components/Panel'
 import { api } from '@/lib/api'
+import { Download } from 'lucide-react'
+import { downloadV2Report } from '@/lib/pdf/v2Report'
 import { cn } from '@/lib/utils'
 
 const f = (v, d = 3) => (v == null ? '—' : Number(v).toFixed(d))
@@ -280,7 +282,10 @@ export default function V2Evaluation() {
   const q = useQuery({ queryKey: ['v2', 'summary'], queryFn: api.v2Summary })
   return (
     <div className="container py-6">
+      <div className="flex items-start justify-between gap-4">
       <h1 className="text-2xl font-semibold font-display">V2 Evaluation</h1>
+      <button type="button" disabled={!q.data} onClick={() => downloadV2Report(q.data)} className="flex items-center gap-2 rounded-lg border border-border px-3 py-1.5 text-xs text-foreground hover:bg-secondary disabled:opacity-40"><Download size={13} /> Download PDF</button>
+      </div>
       <p className="mt-1 text-sm text-muted-foreground">Every number here is read from a result file made by the V2 pipeline on the combined Golden layer ({q.data ? q.data.data.labelled_records.toLocaleString() : '4,291,090'} labelled records).</p>
       <div className="flex flex-wrap gap-2 mt-4 mb-5">
         {TABS.map((t) => (

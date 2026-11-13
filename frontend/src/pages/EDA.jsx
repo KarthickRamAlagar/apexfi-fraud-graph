@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { motion } from 'framer-motion'
 import { ChevronDown, Sparkles, Share2, Info } from 'lucide-react'
@@ -28,6 +29,7 @@ export default function EDA() {
   const [selectorOpen, setSelectorOpen] = useState(false)
   const [statColumn, setStatColumn] = useState(0)
   const audioRef = useRef(null)
+  const navigate = useNavigate()
 
   const { data: ds, error } = useQuery({
     queryKey: ['eda', datasetKey],
@@ -47,8 +49,7 @@ export default function EDA() {
       audioRef.current.currentTime = 0
       audioRef.current.play().catch(() => {})
     }
-    const streamlitUrl = import.meta.env.VITE_STREAMLIT_URL || 'http://localhost:8501'
-    window.open(streamlitUrl, '_blank', 'noopener,noreferrer')
+    navigate('/profiling')
   }
 
   if (error) {
@@ -266,7 +267,7 @@ export default function EDA() {
 
       <div className="flex flex-col items-center gap-3 pt-6 text-center border-t border-border/60">
         <p className="text-xs text-muted-foreground">
-          Full statistical profiling (pandas-profiling style) runs in the standalone Streamlit app.
+          Every column, its missing values and the raw rows are on the Full Profiling and Raw Data Browser pages.
         </p>
         <motion.button
           whileTap={{ scale: 0.97 }}
@@ -274,7 +275,7 @@ export default function EDA() {
           className="flex items-center gap-2 rounded-full bg-primary px-5 py-2.5 text-sm font-medium text-primary-foreground shadow-lg shadow-primary/20 transition-transform hover:scale-[1.02]"
         >
           <Sparkles size={15} />
-          Explore More EDA
+          Open Full Profiling
         </motion.button>
       </div>
     </div>

@@ -240,9 +240,9 @@ def main():
             "graph-only, and combined approaches."
         ),
     }
-    with open("streamlit_app/data/temporal_hybrid_stacking.json", "w") as f:
+    with open("app_data/temporal_hybrid_stacking.json", "w") as f:
         json.dump(output, f, indent=2)
-    print("\nSaved: streamlit_app/data/temporal_hybrid_stacking.json")
+    print("\nSaved: app_data/temporal_hybrid_stacking.json")
 
 
 if __name__ == "__main__":

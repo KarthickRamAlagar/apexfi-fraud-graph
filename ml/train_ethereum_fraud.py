@@ -261,10 +261,10 @@ def main():
         "fraud_count": int(df["FLAG"].sum()),
         "fraud_rate_pct": round(float(df["FLAG"].mean()) * 100, 2),
     }
-    with open("streamlit_app/data/model_metrics_ethereum.json", "w") as f:
+    with open("app_data/model_metrics_ethereum.json", "w") as f:
         import json
         json.dump(metrics_payload, f, indent=2)
-    print("Saved: streamlit_app/data/model_metrics_ethereum.json")
+    print("Saved: app_data/model_metrics_ethereum.json")
 
     model.save_model(f"{CHECKPOINT_DIR}/ethereum_fraud_lightgbm.txt")
     with open(f"{CHECKPOINT_DIR}/ethereum_fraud_cat_maps.pkl", "wb") as f:

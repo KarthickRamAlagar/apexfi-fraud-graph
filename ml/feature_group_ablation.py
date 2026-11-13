@@ -119,9 +119,9 @@ def main():
             "both (the main temporal model's real, already-reported result)."
         ),
     }
-    with open("streamlit_app/data/feature_group_ablation.json", "w") as f:
+    with open("app_data/feature_group_ablation.json", "w") as f:
         json.dump(output, f, indent=2)
-    print("\nSaved: streamlit_app/data/feature_group_ablation.json")
+    print("\nSaved: app_data/feature_group_ablation.json")
 
 
 if __name__ == "__main__":

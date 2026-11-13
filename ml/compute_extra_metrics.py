@@ -141,9 +141,9 @@ def main():
             "tracemalloc cannot see memory used by C-extension code like LightGBM/SHAP."
         ),
     }
-    with open("streamlit_app/data/extra_metrics.json", "w") as f:
+    with open("app_data/extra_metrics.json", "w") as f:
         json.dump(output, f, indent=2)
-    print("\nSaved (corrected): streamlit_app/data/extra_metrics.json")
+    print("\nSaved (corrected): app_data/extra_metrics.json")
 
 
 if __name__ == "__main__":

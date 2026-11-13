@@ -23,7 +23,7 @@ from sklearn.metrics import (
 )
 
 GRAPH_PATH = "ieee_cis_graph.pt"
-METRICS_DIR = os.path.join(os.path.dirname(__file__), "..", "streamlit_app", "data")
+METRICS_DIR = os.path.join(os.path.dirname(__file__), "..", "app_data")
 N_TRIALS = 40
 TRIAL_ROUND_CAP = 1500
 

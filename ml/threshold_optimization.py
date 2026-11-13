@@ -120,9 +120,9 @@ def main():
             "heavily imbalanced fraud data."
         ),
     }
-    with open("streamlit_app/data/threshold_optimization.json", "w") as f:
+    with open("app_data/threshold_optimization.json", "w") as f:
         json.dump(output, f, indent=2)
-    print("\nSaved: streamlit_app/data/threshold_optimization.json")
+    print("\nSaved: app_data/threshold_optimization.json")
 
 
 if __name__ == "__main__":

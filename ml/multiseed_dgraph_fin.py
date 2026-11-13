@@ -119,13 +119,13 @@ def main():
     lgbm_summary = summarize(lgbm_results, "LightGBM alone")
     stacked_summary = summarize(stacked_results, "Stacked")
 
-    with open("streamlit_app/data/multiseed_dgraph_fin.json", "w") as f:
+    with open("app_data/multiseed_dgraph_fin.json", "w") as f:
         json.dump(
             {"seeds": SEEDS, "lightgbm": lgbm_summary, "stacked": stacked_summary,
              "note": "GNN reused a single validated checkpoint across all seeds. LightGBM's own training randomness varied per seed; train/val/test split held fixed."},
             f, indent=2,
         )
-    print("\nSaved to streamlit_app/data/multiseed_dgraph_fin.json")
+    print("\nSaved to app_data/multiseed_dgraph_fin.json")
 
 
 if __name__ == "__main__":

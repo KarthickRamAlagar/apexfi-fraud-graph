@@ -14,7 +14,7 @@ from pydantic import BaseModel, Field
 from backend.services.sdg_engine import Assumptions, evaluate
 
 router = APIRouter(prefix="/api/sdg", tags=["sdg-v2"])
-PROBS = "streamlit_app/data/v2_final_probs.npz"
+PROBS = "app_data/v2_final_probs.npz"
 _cache = {}
 
 
@@ -33,7 +33,7 @@ def _clean(o):
 def _probs():
     if "p" not in _cache:
         if not os.path.exists(PROBS):
-            raise HTTPException(404, "V2 engine scores not found: run v2_final.py and copy final_probs.npz to streamlit_app/data/v2_final_probs.npz")
+            raise HTTPException(404, "V2 engine scores not found: run v2_final.py and copy final_probs.npz to app_data/v2_final_probs.npz")
         z = np.load(PROBS)
         _cache["p"] = dict(score=z["final_test"], y=z["y_test"], amount=z["amount_test"])
     return _cache["p"]

@@ -18,7 +18,7 @@ from reportlab.lib.styles import ParagraphStyle, getSampleStyleSheet
 from reportlab.lib.units import mm
 from reportlab.platypus import KeepTogether, Paragraph, SimpleDocTemplate, Spacer, Table, TableStyle
 
-DATA_DIR = "streamlit_app/data"
+DATA_DIR = "app_data"
 
 INK = colors.HexColor("#111827")
 MUTED = colors.HexColor("#6b7280")

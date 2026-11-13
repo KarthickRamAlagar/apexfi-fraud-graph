@@ -211,11 +211,11 @@ def main():
           f"(F1={best['f1']}, Precision={best['precision']}, Recall={best['recall']})")
 
     import json
-    with open("streamlit_app/data/hybrid_threshold_check.json", "w") as f:
+    with open("app_data/hybrid_threshold_check.json", "w") as f:
         json.dump({"threshold_sweep": results, "best": best,
                     "prob_distribution": {"min": float(stacked_probs_test.min()), "max": float(stacked_probs_test.max()),
                                            "mean": float(stacked_probs_test.mean()), "median": float(np.median(stacked_probs_test))}}, f, indent=2)
-    print("\nSaved: streamlit_app/data/hybrid_threshold_check.json")
+    print("\nSaved: app_data/hybrid_threshold_check.json")
 
 
 if __name__ == "__main__":

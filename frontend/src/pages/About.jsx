@@ -90,12 +90,12 @@ export default function About() {
         {active === 'how' && (
           <>
             <Section title="The pipeline" icon={Workflow}>
-              <Flow steps={['Raw files', 'Bronze (as loaded)', 'Silver (cleaned)', 'Gold (features + graph edges)', 'Models', 'FastAPI', 'React + Streamlit']} />
+              <Flow steps={['Raw files', 'Bronze (as loaded)', 'Silver (cleaned)', 'Gold (features + graph edges)', 'Models', 'FastAPI', 'React app']} />
               <ul className="mt-3">
                 <li>Everything is stored in PostgreSQL in three layers (Bronze → Silver → Gold).</li>
                 <li>Gold holds the model-ready features and the graph links (for example, transactions sharing a device or a card).</li>
                 <li>The backend pre-loads all models when it starts, and a database index fix cut live scoring from <b>6,374 ms to 138 ms</b> on average.</li>
-                <li>The web app and the Streamlit app read only saved results and live predictions; they never train anything.</li>
+                <li>The web app reads only saved results and live predictions; they never train anything.</li>
               </ul>
             </Section>
             <div className="grid grid-cols-1 gap-5 xl:grid-cols-2">
@@ -172,7 +172,7 @@ export default function About() {
                 <li>Audit log of who scored or downloaded what, and a secrets manager.</li>
                 <li>Independent out-of-time validation on external data.</li>
                 <li>AI assistant overlay.</li>
-                <li>Public deployment (frontend and Streamlit) on a trimmed dataset.</li>
+                <li>Public deployment (frontend and API) on a trimmed dataset.</li>
               </ul>
               <p className="mt-3 font-medium text-foreground">Planned roles (design only, not implemented)</p>
               <div className="overflow-x-auto">

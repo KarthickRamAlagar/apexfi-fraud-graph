@@ -10,7 +10,7 @@ import numpy as np
 from fastapi import APIRouter, HTTPException
 
 router = APIRouter(prefix="/api/v2", tags=["v2-eval"])
-DATA = os.path.join(os.path.dirname(__file__), "..", "..", "streamlit_app", "data")
+DATA = os.path.join(os.path.dirname(__file__), "..", "..", "app_data")
 _c = {}
 
 
@@ -18,7 +18,7 @@ def _summary():
     if "s" not in _c:
         p = os.path.join(DATA, "v2_summary.json")
         if not os.path.exists(p):
-            raise HTTPException(404, "v2_summary.json not found in streamlit_app/data")
+            raise HTTPException(404, "v2_summary.json not found in app_data")
         _c["s"] = json.load(open(p, encoding="utf-8"))
     return _c["s"]
 
@@ -27,7 +27,7 @@ def _scores():
     if "z" not in _c:
         p = os.path.join(DATA, "v2_test_scores.npz")
         if not os.path.exists(p):
-            raise HTTPException(404, "v2_test_scores.npz not found in streamlit_app/data")
+            raise HTTPException(404, "v2_test_scores.npz not found in app_data")
         z = np.load(p)
         d = {k: z[k] for k in ("tid", "dt", "v2", "v1", "y", "amount")}
         d["t2"] = float(z["threshold_v2"]); d["t1"] = float(z["threshold_v1"])

@@ -27,7 +27,7 @@ from sqlalchemy import text
 
 from etl.db.connection import get_engine
 
-OUTPUT_DIR = os.path.join(os.path.dirname(__file__), "..", "..", "streamlit_app", "data")
+OUTPUT_DIR = os.path.join(os.path.dirname(__file__), "..", "..", "app_data")
 SAMPLE_SIZE = 50_000
 
 # For raw-row browsing, only meaningful/interpretable columns — the 339

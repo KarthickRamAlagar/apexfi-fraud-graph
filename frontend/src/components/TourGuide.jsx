@@ -128,7 +128,7 @@ export default function TourGuide() {
               Maybe later
             </button>
           </div>
-          <p className="mt-2 text-[10px] text-muted-foreground">You can start it any time from More → Application Tour.</p>
+          <p className="mt-2 text-[10px] text-muted-foreground">You can start it any time from the Application Tour link at the bottom of the sidebar.</p>
           <p className="mt-1 text-[10px] leading-relaxed text-muted-foreground">
             Guide character inspired by Dr. P. V. Narasimha Rao, who led India's 1991 economic reforms.
           </p>

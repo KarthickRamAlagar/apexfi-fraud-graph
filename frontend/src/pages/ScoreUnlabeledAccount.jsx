@@ -270,7 +270,8 @@ import { useSearchParams } from 'react-router-dom'
 import { useQuery, useMutation } from '@tanstack/react-query'
 import { motion, AnimatePresence } from 'framer-motion'
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell, ReferenceLine } from 'recharts'
-import { HelpCircle, ShieldAlert, ShieldCheck } from 'lucide-react'
+import { HelpCircle, ShieldAlert, ShieldCheck, Download } from 'lucide-react'
+import { downloadScoreReport } from '@/lib/pdf/scoreReports'
 import AnalyzingCard from '@/components/AnalyzingCard'
 import NumberInput from '@/components/NumberInput'
 import { Panel } from '@/components/Panel'
@@ -421,6 +422,12 @@ export default function ScoreUnlabeledAccount() {
               <Panel title="Prediction" icon={result.isFlagged ? ShieldAlert : ShieldCheck}>
                 <ResultPanel result={result} />
               </Panel>
+              <button
+                onClick={() => downloadScoreReport('account', result)}
+                className="mt-4 flex w-full items-center justify-center gap-2 rounded-lg bg-primary py-2.5 text-sm font-medium text-primary-foreground transition hover:brightness-110"
+              >
+                <Download size={15} /> Download PDF report
+              </button>
               <button
                 onClick={handleScoreAnother}
                 className="mt-4 w-full rounded-lg border border-border py-2.5 text-sm text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
