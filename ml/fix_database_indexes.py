@@ -83,6 +83,6 @@ output = {
     },
     "note": "Real, measured before/after latency for the live scoring endpoint's real database queries, following the addition of composite indexes on the exact columns the rolling-window lookup filters on.",
 }
-with open("streamlit_app/data/database_optimization.json", "w") as f:
+with open("app_data/database_optimization.json", "w") as f:
     json.dump(output, f, indent=2)
-print("\nSaved: streamlit_app/data/database_optimization.json")
+print("\nSaved: app_data/database_optimization.json")

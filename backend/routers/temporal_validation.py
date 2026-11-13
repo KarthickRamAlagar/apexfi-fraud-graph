@@ -14,7 +14,7 @@ from backend.services.temporal_predictor_service import get_temporal_predictor
 
 router = APIRouter(prefix="/api/temporal-validation", tags=["temporal-validation"])
 
-DATA_DIR = "streamlit_app/data"
+DATA_DIR = "app_data"
 RESULTS_PATH = f"{DATA_DIR}/temporal_validation_results.json"
 
 # All real result files generated across tonight's baseline evaluation

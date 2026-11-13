@@ -129,9 +129,9 @@ def main():
             "of the two models' own real inference cost."
         ),
     }
-    with open("streamlit_app/data/random_split_full_metrics.json", "w") as f:
+    with open("app_data/random_split_full_metrics.json", "w") as f:
         json.dump(output, f, indent=2)
-    print("\nSaved: streamlit_app/data/random_split_full_metrics.json")
+    print("\nSaved: app_data/random_split_full_metrics.json")
 
 
 if __name__ == "__main__":

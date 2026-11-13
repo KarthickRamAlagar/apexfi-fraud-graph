@@ -289,7 +289,7 @@ def compute_ethereum_summary():
     total = len(df)
     fraud_count = int(df["FLAG"].sum())
 
-    metrics_path = "streamlit_app/data/model_metrics_ethereum.json"
+    metrics_path = "app_data/model_metrics_ethereum.json"
     metrics = None
     if os.path.exists(metrics_path):
         with open(metrics_path) as f:
@@ -472,7 +472,7 @@ def compute_dashboard_summary(conn):
 
 
 def compute_model_status():
-    data_dir = os.path.join(os.path.dirname(__file__), "..", "..", "streamlit_app", "data")
+    data_dir = os.path.join(os.path.dirname(__file__), "..", "..", "app_data")
     results = {}
     for key, label in [("ieee_cis", "IEEE-CIS"), ("dgraph_fin", "DGraph-Fin")]:
         path = os.path.join(data_dir, f"multiseed_{key}.json")

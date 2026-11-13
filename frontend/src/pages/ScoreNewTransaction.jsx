@@ -10,6 +10,8 @@ import Stepper from '@/components/Stepper'
 import TransactionGraph from '@/components/TransactionGraph'
 import { Panel } from '@/components/Panel'
 import { api } from '@/lib/api'
+import { Download } from 'lucide-react'
+import { downloadScoreReport } from '@/lib/pdf/scoreReports'
 import { cn } from '@/lib/utils'
 
 const PRODUCT_CODES = ['W', 'C', 'R', 'H', 'S']
@@ -353,6 +355,12 @@ export default function ScoreNewTransaction() {
                 <Panel title="Graph Context" icon={Share2}>
                   <GraphContextPanel graphContext={result.graphContext} />
                 </Panel>
+                <button
+                  onClick={() => downloadScoreReport('transaction', result, Object.fromEntries(Object.entries(form).filter(([, v]) => v !== '')))}
+                  className="flex w-full items-center justify-center gap-2 rounded-lg bg-primary py-2.5 text-sm font-medium text-primary-foreground transition hover:brightness-110"
+                >
+                  <Download size={15} /> Download PDF report
+                </button>
                 <button
                   onClick={handleScoreAnother}
                   className="w-full rounded-lg border border-border py-2.5 text-sm text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"

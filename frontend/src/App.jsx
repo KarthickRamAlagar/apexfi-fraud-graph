@@ -1,6 +1,6 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import TopNav from '@/components/TopNav'
+import AppShell from '@/components/layout/AppShell'
 import DesktopOnlyGate from '@/components/DesktopOnlyGate'
 import Dashboard from '@/pages/Dashboard'
 import Datasets from '@/pages/Datasets'
@@ -10,16 +10,22 @@ import ScoreUnlabeledAccount from '@/pages/ScoreUnlabeledAccount'
 import Analytics from '@/pages/Analytics'
 import EDA from '@/pages/EDA'
 import AskYourData from '@/pages/AskYourData'
-import { ReactQueryDevtools } from '@tanstack/react-query-devtools'
 import EthereumFraud from '@/pages/EthereumFraud'
 import TemporalValidation from '@/pages/TemporalValidation'
 import TemporalFullReportPage from '@/pages/TemporalFullReportPage'
 import ModelComparison from '@/pages/ModelComparison'
 import Economics from '@/pages/Economics'
 import About from '@/pages/About'
-import TourGuide from '@/components/TourGuide'
-import SdgLab from '@/pages/SdgLab'
 import V2Evaluation from '@/pages/V2Evaluation'
+import SdgLab from '@/pages/SdgLab'
+import Ops from '@/pages/Ops'
+import Settings from '@/pages/Settings'
+import EvaluationMetrics from '@/pages/EvaluationMetrics'
+import EdaCharts from '@/pages/EdaCharts'
+import DeepProfiling from '@/pages/DeepProfiling'
+import RawDataBrowser from '@/pages/RawDataBrowser'
+import ModelEvaluation from '@/pages/ModelEvaluation'
+import TourGuide from '@/components/TourGuide'
 // Real Gold-layer data doesn't change between page visits within a
 // session (it's precomputed / refreshed only when you re-run the
 // precompute script), so a 5-minute staleTime avoids refetching every
@@ -49,13 +55,10 @@ const queryClient = new QueryClient({
 export default function App() {
   return (
     <QueryClientProvider client={queryClient}>
-    <ReactQueryDevtools initialIsOpen={false} />
       <DesktopOnlyGate>
         <BrowserRouter>
-          <div className="app-gradient-bg" />
-          <div className="min-h-screen">
-            <TopNav />
-            <Routes>
+          <Routes>
+            <Route element={<AppShell />}>
               <Route path="/" element={<Dashboard />} />
               <Route path="/datasets" element={<Datasets />} />
               <Route path="/investigate" element={<Investigate />} />
@@ -63,17 +66,24 @@ export default function App() {
               <Route path="/score-account" element={<ScoreUnlabeledAccount />} />
               <Route path="/analytics" element={<Analytics />} />
               <Route path="/eda" element={<EDA />} />
+              <Route path="/profiling" element={<DeepProfiling />} />
+              <Route path="/raw-data" element={<RawDataBrowser />} />
               <Route path="/ask" element={<AskYourData />} />
               <Route path="/ethereum-fraud" element={<EthereumFraud />} />
               <Route path="/temporal-validation" element={<TemporalValidation />} />
               <Route path="/temporal-full-report" element={<TemporalFullReportPage />} />
               <Route path="/model-comparison" element={<ModelComparison />} />
-              <Route path="/economics" element={<Economics />} />
-              <Route path="/about" element={<About />} />
-              <Route path="/sdg-lab" element={<SdgLab />} />
+              <Route path="/model-evaluation" element={<ModelEvaluation />} />
               <Route path="/v2-evaluation" element={<V2Evaluation />} />
-</Routes>
-          </div>
+              <Route path="/sdg-lab" element={<SdgLab />} />
+              <Route path="/economics" element={<Economics />} />
+              <Route path="/evaluation-metrics" element={<EvaluationMetrics />} />
+              <Route path="/eda-charts" element={<EdaCharts />} />
+              <Route path="/ops" element={<Ops />} />
+              <Route path="/settings" element={<Settings />} />
+              <Route path="/about" element={<About />} />
+            </Route>
+          </Routes>
           <TourGuide />
         </BrowserRouter>
       </DesktopOnlyGate>

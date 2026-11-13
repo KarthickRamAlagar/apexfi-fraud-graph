@@ -20,7 +20,7 @@ from datetime import datetime, timezone
 from sqlalchemy import text
 
 # Operating threshold finalised for the time-series model (see
-# streamlit_app/data/threshold_optimization.json / quick_wins.json).
+# app_data/threshold_optimization.json / quick_wins.json).
 TEMPORAL_THRESHOLD = 0.6
 
 NON_TS_LABEL = "Non-time-series (stacked LightGBM + GraphSAGE, random split)"

@@ -103,9 +103,9 @@ def main():
             "the real sample."
         ),
     }
-    with open("streamlit_app/data/shap_global_importance.json", "w") as f:
+    with open("app_data/shap_global_importance.json", "w") as f:
         json.dump(output, f, indent=2)
-    print("\nSaved: streamlit_app/data/shap_global_importance.json")
+    print("\nSaved: app_data/shap_global_importance.json")
 
 
 if __name__ == "__main__":

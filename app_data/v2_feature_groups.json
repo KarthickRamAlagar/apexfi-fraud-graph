@@ -1,0 +1,232 @@
+{
+  "protocol": "Time-ordered: first 60% fit (random 100,000-row sample), next 15% validation, last 25% test.",
+  "n_columns": 438,
+  "test_rows": 147635,
+  "test_frauds": 5100,
+  "all_columns": {
+    "pr_auc": 0.45614223269130033,
+    "roc_auc": 0.8777935629157474
+  },
+  "params": "V2 default LightGBM (400 trees max, learning rate 0.06, 63 leaves), early stopping on validation PR-AUC",
+  "groups": [
+    {
+      "group": "Amount",
+      "n_features": 1,
+      "alone_pr": 0.07250057312534404,
+      "alone_roc": 0.677017150242424,
+      "without_pr": 0.45768500151690295,
+      "without_roc": 0.8765759789305275,
+      "drop_in_pr": -0.001542768825602614,
+      "gain_share": 0.031123041861152872
+    },
+    {
+      "group": "Product",
+      "n_features": 1,
+      "alone_pr": 0.08212949171852091,
+      "alone_roc": 0.6876410520429451,
+      "without_pr": 0.463364262137123,
+      "without_roc": 0.88057788558297,
+      "drop_in_pr": -0.007222029445822675,
+      "gain_share": 0.002051534170965929
+    },
+    {
+      "group": "Card",
+      "n_features": 6,
+      "alone_pr": 0.12633727127818092,
+      "alone_roc": 0.7199847350874262,
+      "without_pr": 0.4333935144284224,
+      "without_roc": 0.8677409387580759,
+      "drop_in_pr": 0.022748718262877943,
+      "gain_share": 0.08916313916053617
+    },
+    {
+      "group": "Address",
+      "n_features": 2,
+      "alone_pr": 0.0808947389926906,
+      "alone_roc": 0.6619177353756249,
+      "without_pr": 0.4647932821280308,
+      "without_roc": 0.8771591133103187,
+      "drop_in_pr": -0.008651049436730451,
+      "gain_share": 0.024349268674327452
+    },
+    {
+      "group": "Distance",
+      "n_features": 2,
+      "alone_pr": 0.05607834765598297,
+      "alone_roc": 0.6226328641675211,
+      "without_pr": 0.46504228589889424,
+      "without_roc": 0.8817904168016525,
+      "drop_in_pr": -0.008900053207593905,
+      "gain_share": 0.016332335321173855
+    },
+    {
+      "group": "Email domain",
+      "n_features": 2,
+      "alone_pr": 0.1015144320006259,
+      "alone_roc": 0.7009307848020816,
+      "without_pr": 0.4597274798943864,
+      "without_roc": 0.8800977276307091,
+      "drop_in_pr": -0.0035852472030860616,
+      "gain_share": 0.023841773338732
+    },
+    {
+      "group": "Vesta V1-V339",
+      "n_features": 339,
+      "alone_pr": 0.36611847248373885,
+      "alone_roc": 0.825964556349077,
+      "without_pr": 0.43733597645736105,
+      "without_roc": 0.8750373936363754,
+      "drop_in_pr": 0.018806256233939278,
+      "gain_share": 0.3929422388034259
+    },
+    {
+      "group": "Counts C1-C14",
+      "n_features": 14,
+      "alone_pr": 0.3620446338036605,
+      "alone_roc": 0.8219233150165387,
+      "without_pr": 0.39539748253082,
+      "without_roc": 0.8675513568390839,
+      "drop_in_pr": 0.06074475016048031,
+      "gain_share": 0.17460802585121707
+    },
+    {
+      "group": "Time deltas D1-D15",
+      "n_features": 15,
+      "alone_pr": 0.2458402572083756,
+      "alone_roc": 0.7938143373110285,
+      "without_pr": 0.46315246586142844,
+      "without_roc": 0.8816614612028557,
+      "drop_in_pr": -0.007010233170128111,
+      "gain_share": 0.11564531757308417
+    },
+    {
+      "group": "Match flags M1-M9",
+      "n_features": 9,
+      "alone_pr": 0.0758392311496794,
+      "alone_roc": 0.7395579936678779,
+      "without_pr": 0.4523844726439356,
+      "without_roc": 0.8754586042506244,
+      "drop_in_pr": 0.003757760047364722,
+      "gain_share": 0.014081191121123523
+    },
+    {
+      "group": "Identity id_01-id_38",
+      "n_features": 38,
+      "alone_pr": 0.14212996962342586,
+      "alone_roc": 0.6950239191337247,
+      "without_pr": 0.4649649828489831,
+      "without_roc": 0.8820997649700073,
+      "drop_in_pr": -0.008822750157682746,
+      "gain_share": 0.07158340034786935
+    },
+    {
+      "group": "Device",
+      "n_features": 2,
+      "alone_pr": 0.08610835703246869,
+      "alone_roc": 0.6709642970388421,
+      "without_pr": 0.4702673384847037,
+      "without_roc": 0.8800244233098579,
+      "drop_in_pr": -0.01412510579340337,
+      "gain_share": 0.027276591965971732
+    },
+    {
+      "group": "Time of day / week",
+      "n_features": 3,
+      "alone_pr": 0.04561031899860372,
+      "alone_roc": 0.54873889178922,
+      "without_pr": 0.4649633397376446,
+      "without_roc": 0.8805846125169119,
+      "drop_in_pr": -0.008821107046344256,
+      "gain_share": 0.017002141810420007
+    },
+    {
+      "group": "Macro rates",
+      "n_features": 4,
+      "alone_pr": 0.03454465404544993,
+      "alone_roc": 0.5,
+      "without_pr": 0.45614223269130033,
+      "without_roc": 0.8777935629157474,
+      "drop_in_pr": 0.0,
+      "gain_share": 0.0
+    }
+  ],
+  "top_features": [
+    {
+      "feature": "v258",
+      "group": "Vesta V1-V339",
+      "gain_share": 0.07888496729632866
+    },
+    {
+      "feature": "c14",
+      "group": "Counts C1-C14",
+      "gain_share": 0.03822922455303871
+    },
+    {
+      "feature": "c1",
+      "group": "Counts C1-C14",
+      "gain_share": 0.0334326331083645
+    },
+    {
+      "feature": "transactionamt",
+      "group": "Amount",
+      "gain_share": 0.031123041861152872
+    },
+    {
+      "feature": "card1",
+      "group": "Card",
+      "gain_share": 0.03005633747370632
+    },
+    {
+      "feature": "card2",
+      "group": "Card",
+      "gain_share": 0.028979274159353134
+    },
+    {
+      "feature": "deviceinfo",
+      "group": "Device",
+      "gain_share": 0.02630995188717739
+    },
+    {
+      "feature": "d2",
+      "group": "Time deltas D1-D15",
+      "gain_share": 0.026245426843940156
+    },
+    {
+      "feature": "c13",
+      "group": "Counts C1-C14",
+      "gain_share": 0.02509339998815522
+    },
+    {
+      "feature": "addr1",
+      "group": "Address",
+      "gain_share": 0.022426404019995596
+    },
+    {
+      "feature": "c4",
+      "group": "Counts C1-C14",
+      "gain_share": 0.01939472332835193
+    },
+    {
+      "feature": "c11",
+      "group": "Counts C1-C14",
+      "gain_share": 0.016618990314663358
+    },
+    {
+      "feature": "d15",
+      "group": "Time deltas D1-D15",
+      "gain_share": 0.015882972277341745
+    },
+    {
+      "feature": "v294",
+      "group": "Vesta V1-V339",
+      "gain_share": 0.014113472287474447
+    },
+    {
+      "feature": "dist1",
+      "group": "Distance",
+      "gain_share": 0.013838232738542521
+    }
+  ],
+  "note": "Side study on the 432 raw Gold columns, trained on a 100,000-row sample. The production model (449 features, all fit rows) is on the V2 Evaluation tab.",
+  "seconds": 227
+}

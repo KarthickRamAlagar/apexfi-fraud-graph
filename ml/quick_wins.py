@@ -78,6 +78,6 @@ output = {
     "memory_recheck_mb": {"before": round(mem_before, 2), "after": round(mem_after, 2), "delta": round(mem_after - mem_before, 2)},
     "latency_percentiles_ms": {"p95": round(p95, 2), "p99": round(p99, 2)},
 }
-with open("streamlit_app/data/quick_wins.json", "w") as f:
+with open("app_data/quick_wins.json", "w") as f:
     json.dump(output, f, indent=2)
-print("\nSaved: streamlit_app/data/quick_wins.json")
+print("\nSaved: app_data/quick_wins.json")

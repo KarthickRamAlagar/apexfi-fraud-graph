@@ -22,7 +22,7 @@ from ml.simple_sampler import SimpleNeighborLoader as NeighborLoader, SharedEdge
 from ml.data_utils import normalize_features
 
 CHECKPOINT_DIR = os.path.join(os.path.dirname(__file__), "checkpoints")
-METRICS_DIR = os.path.join(os.path.dirname(__file__), "..", "streamlit_app", "data")
+METRICS_DIR = os.path.join(os.path.dirname(__file__), "..", "app_data")
 
 
 def train_gnn(

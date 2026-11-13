@@ -128,7 +128,7 @@ def main():
     print(f"\nSaved: {CHECKPOINT_DIR}/ieee_cis_temporal_lightgbm.txt")
     print(f"Saved: {CHECKPOINT_DIR}/ieee_cis_temporal_artifacts.pkl")
 
-    with open("streamlit_app/data/temporal_validation_results.json", "w") as f:
+    with open("app_data/temporal_validation_results.json", "w") as f:
         json.dump({
             "dataset": "ieee_cis",
             "split_type": "chronological_75_25",
@@ -140,7 +140,7 @@ def main():
                 "GraphSAGE run."
             ),
         }, f, indent=2)
-    print("Saved: streamlit_app/data/temporal_validation_results.json")
+    print("Saved: app_data/temporal_validation_results.json")
 
 
 if __name__ == "__main__":
