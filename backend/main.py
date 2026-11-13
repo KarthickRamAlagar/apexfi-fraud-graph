@@ -59,6 +59,14 @@ app.include_router(temporal_validation.router)
 app.include_router(compare.router)
 app.include_router(sdg_v2.router)
 app.include_router(v2_eval.router)
+from backend.routers import deep, ops  # noqa: E402
+app.include_router(deep.router)   # Full Profiling, Raw Data Browser, Model Evaluation
+app.include_router(ops.router)    # Ops page
+from backend.routers import eval_extra  # noqa: E402
+app.include_router(eval_extra.router)   # Evaluation Metrics page: curves, feature groups, Bayesian network
+from backend.routers import metrics  # noqa: E402
+app.include_router(metrics.router)   # /metrics for Prometheus and Grafana
+ops.add_latency_middleware(app)   # measures response time per route
 
 
 @app.on_event("startup")
