@@ -1,5 +1,7 @@
 # ApexFi — UPI/IMPS Cross-Channel Fraud Detection
 
+**[About](docs/ABOUT.md) | [All Engines](docs/ENGINES.md) | [Security](docs/SECURITY.md)**
+
 M.Tech project — a hybrid fraud-detection system combining tabular gradient
 boosting (LightGBM) with a Graph Neural Network (GraphSAGE), stacked
 together and made explainable with SHAP and real graph context. Built
